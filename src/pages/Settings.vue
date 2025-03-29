@@ -1,80 +1,108 @@
 <template>
   <v-container fluid>
     <h1 class="text-h4 mb-4">服务器设置</h1>
-    <v-card class="elevation-2 pa-4" :loading="loadingSettings">
-      <v-card-title>服务器配置</v-card-title>
-      <v-card-text>
-        <!-- 使用 SettingsEditor 组件或自定义表单 -->
-        <SettingsEditor
-          v-if="serverSettings"
-          :config-data="serverSettings"
-          @update:config-data="handleSettingsUpdate"
-        />
-        <v-alert v-if="settingsError" type="error" class="mt-4">{{ settingsError }}</v-alert>
-      </v-card-text>
-      <v-card-actions>
+
+    <v-card elevation="2" :loading="loadingSettings || savingSettings">
+      <v-toolbar density="compact" color="surface">
+        <v-toolbar-title>编辑设置</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="saveSettings" :loading="savingSettings" :disabled="!isSettingsDirty">
-          保存设置
+        <v-btn color="primary" @click="saveSettings" :disabled="!isDirty || savingSettings" :loading="savingSettings">
+          保存更改
         </v-btn>
-      </v-card-actions>
+      </v-toolbar>
+
+      <v-card-text>
+        <div v-if="loadingSettings" class="text-center pa-5">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p class="mt-2">正在加载设置...</p>
+        </div>
+        <div v-else-if="loadingError" class="pa-5">
+          <v-alert type="error">加载设置失败: {{ loadingError }}</v-alert>
+          <v-btn @click="fetchSettings" class="mt-4">重试</v-btn>
+        </div>
+        <SettingsEditor
+            v-else
+            :config-data="currentSettings"
+            @update:config-data="handleEditorUpdate"
+        />
+        <v-alert v-if="saveError" type="error" class="mt-4">保存失败: {{ saveError }}</v-alert>
+      </v-card-text>
     </v-card>
+
   </v-container>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { getServerSettings, updateServerSettings } from '@/api';
+import SettingsEditor from '@/components/ConfigEditor/SettingsEditor.vue'; // 引入编辑器组件
+import { getServerSettings, updateServerSettings } from '@/api'; // 引入 API
 import { useAppStore } from '@/store/app';
-import SettingsEditor from '@/components/ConfigEditor/SettingsEditor.vue'; // 假设有 SettingsEditor 组件
 
-const serverSettings = ref(null);
+const appStore = useAppStore();
+const currentSettings = ref(null); // 当前编辑的设置
+const originalSettings = ref(null); // 用于比较是否更改
 const loadingSettings = ref(false);
 const savingSettings = ref(false);
-const settingsError = ref('');
-const originalSettings = ref(null); // 用于比较是否更改
-const isSettingsDirty = ref(false); // 标记设置是否已更改
-const appStore = useAppStore();
+const isDirty = ref(false); // 是否有未保存的更改
+const loadingError = ref(null);
+const saveError = ref(null);
 
+// 获取当前设置
 const fetchSettings = async () => {
   loadingSettings.value = true;
-  settingsError.value = '';
+  loadingError.value = null;
+  isDirty.value = false; // 重置更改状态
   try {
     const response = await getServerSettings();
-    serverSettings.value = response.data;
-    originalSettings.value = JSON.parse(JSON.stringify(response.data)); // 深拷贝用于比较
-    isSettingsDirty.value = false;
+    // 深拷贝数据
+    currentSettings.value = JSON.parse(JSON.stringify(response.data || {}));
+    originalSettings.value = JSON.parse(JSON.stringify(response.data || {}));
   } catch (error) {
-    console.error('获取服务器设置失败:', error);
-    settingsError.value = `获取设置失败: ${error.message}`;
+    console.error("加载服务器设置失败:", error);
+    loadingError.value = error.response?.data?.detail || error.message || '未知错误';
+    currentSettings.value = null; // 加载失败则清空
+    originalSettings.value = null;
   } finally {
     loadingSettings.value = false;
   }
 };
 
+// 处理编辑器更新
+const handleEditorUpdate = (newSettings) => {
+  currentSettings.value = newSettings;
+  checkIfDirty();
+};
+
+// 检查是否有更改
+const checkIfDirty = () => {
+  // 简单的 JSON 字符串比较
+  isDirty.value = JSON.stringify(currentSettings.value) !== JSON.stringify(originalSettings.value);
+}
+
+// 保存设置
 const saveSettings = async () => {
-  if (!serverSettings.value || !isSettingsDirty.value) return;
+  if (!currentSettings.value || !isDirty.value) return;
   savingSettings.value = true;
-  settingsError.value = '';
+  saveError.value = null;
   try {
-    await updateServerSettings(serverSettings.value);
+    await updateServerSettings(currentSettings.value); // 发送整个对象
+    // 更新原始数据
+    originalSettings.value = JSON.parse(JSON.stringify(currentSettings.value));
+    isDirty.value = false; // 标记为未更改
     appStore.showSnackbar('服务器设置已保存', 'success');
-    originalSettings.value = JSON.parse(JSON.stringify(serverSettings.value)); // 更新原始数据
-    isSettingsDirty.value = false; // 清除 dirty 标记
+    // 可能需要通知后端其他部分配置已更改（如果需要）
   } catch (error) {
-    console.error('保存服务器设置失败:', error);
-    settingsError.value = `保存设置失败: ${error.message}`;
+    console.error("保存服务器设置失败:", error);
+    saveError.value = error.response?.data?.detail || error.message || '未知错误';
     appStore.showSnackbar('保存服务器设置失败', 'error');
   } finally {
     savingSettings.value = false;
   }
 };
 
-const handleSettingsUpdate = (updatedSettings) => {
-  serverSettings.value = updatedSettings;
-  isSettingsDirty.value = JSON.stringify(serverSettings.value) !== JSON.stringify(originalSettings.value);
-};
+// 组件挂载时加载设置
+onMounted(fetchSettings);
 
-
-onMounted(() => { fetchSettings(); });
+// 如果需要，可以监听 currentSettings 的深度变化来自动检测 isDirty
+// watch(currentSettings, checkIfDirty, { deep: true });
 </script>

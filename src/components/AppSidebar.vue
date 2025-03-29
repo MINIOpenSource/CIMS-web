@@ -8,7 +8,25 @@
     </v-list-item>
     <v-divider></v-divider>
     <v-list density="compact" nav>
-      <v-list-item v-for="item in mainNavItems" :key="item.title" :prepend-icon="item.icon" :title="item.title" :to="item.to" exact link></v-list-item>
+      <v-list-item prepend-icon="mdi-view-dashboard-outline" title="概览" :to="{ name: 'Overview' }" link exact></v-list-item>
+
+      <!-- 设备管理 - 使用 v-list-group -->
+      <v-list-group value="DeviceManagement">
+        <template v-slot:activator="{ props }">
+          <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-devices"
+              title="设备管理"
+          ></v-list-item>
+        </template>
+        <!-- 子菜单项 -->
+        <v-list-item prepend-icon="mdi-lan-connect" title="已注册设备" :to="{ name: 'RegisteredDevices' }" link exact></v-list-item>
+        <v-list-item prepend-icon="mdi-playlist-plus" title="预注册设备" :to="{ name: 'PreRegisteredDevices' }" link exact></v-list-item>
+      </v-list-group>
+
+      <v-list-item prepend-icon="mdi-cog-outline" title="配置管理" :to="{ name: 'ConfigManagement' }" link></v-list-item>
+      <v-list-item prepend-icon="mdi-puzzle-outline" title="插件管理" :to="{ name: 'PluginManagement' }" link exact></v-list-item>
+      <v-list-item prepend-icon="mdi-cogs" title="服务器设置" :to="{ name: 'Settings' }" link exact></v-list-item>
     </v-list>
     <v-spacer></v-spacer>
     <v-list density="compact" nav>
