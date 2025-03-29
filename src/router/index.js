@@ -1,56 +1,30 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import OverviewPage from '../components/OverviewPage.vue'
-import RegisteredDevices from '../components/DeviceManagement/RegisteredDevices.vue'
-import PreRegisteredDevices from '../components/DeviceManagement/PreRegisteredDevices.vue'
-import ConfigurationManagement from '../components/ConfigurationManagement/ConfigList.vue' // 假设 ConfigList 作为配置管理主页
-import PluginManagement from '../components/PluginManagement.vue'
-import SettingsPage from '../components/SettingsPage.vue'
-
-Vue.use(VueRouter)
+// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+import DefaultLayout from '@/layouts/DefaultLayout.vue';
 
 const routes = [
   {
     path: '/',
-    redirect: '/overview' // 默认重定向到概览页
+    component: DefaultLayout,
+    children: [
+      { path: '', name: 'Overview', component: () => import('@/pages/Overview.vue'), meta: { title: '概览' } },
+      {
+        path: 'devices', name: 'DeviceManagement', component: { template: '<router-view />' }, redirect: { name: 'RegisteredDevices' },
+        children: [
+          { path: 'registered', name: 'RegisteredDevices', component: () => import('@/pages/DeviceManagement/RegisteredDevices.vue'), meta: { title: '已注册设备' } },
+          { path: 'pre-registered', name: 'PreRegisteredDevices', component: () => import('@/pages/DeviceManagement/PreRegisteredDevices.vue'), meta: { title: '预注册设备' } }
+        ]
+      },
+      { path: 'configs/:resourceType?', name: 'ConfigManagement', component: () => import('@/pages/ConfigManagement/Index.vue'), props: true, meta: { title: '配置管理' } },
+      { path: 'plugins', name: 'PluginManagement', component: () => import('@/pages/PluginManagement.vue'), meta: { title: '插件管理' } },
+      { path: 'settings', name: 'Settings', component: () => import('@/pages/Settings.vue'), meta: { title: '服务器设置' } },
+      { path: 'download-preset', name: 'DownloadPreset', component: () => import('@/pages/DownloadPreset.vue'), meta: { title: '下载预设' } },
+      { path: 'export-data', name: 'ExportData', component: () => import('@/pages/ExportData.vue'), meta: { title: '导出数据' } },
+    ],
   },
-  {
-    path: '/overview',
-    name: 'Overview',
-    component: OverviewPage
-  },
-  {
-    path: '/devices/registered',
-    name: 'RegisteredDevices',
-    component: RegisteredDevices
-  },
-  {
-    path: '/devices/pre-registered',
-    name: 'PreRegisteredDevices',
-    component: PreRegisteredDevices
-  },
-  {
-    path: '/configs',
-    name: 'ConfigurationManagement',
-    component: ConfigurationManagement
-  },
-  {
-    path: '/plugins',
-    name: 'PluginManagement',
-    component: PluginManagement
-  },
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: SettingsPage
-  }
-  // TODO: 添加 集控预设配置下载 和 服务器数据导出 的路由 (如果需要页面)
-]
+];
 
-const router = new VueRouter({
-  mode: 'history', // 可选，根据部署环境选择 history 或 hash 模式
-  base: process.env.BASE_URL,
-  routes
-})
+const router = createRouter({ history: createWebHistory(import.meta.env.BASE_URL), routes });
+router.beforeEach((to, from, next) => { document.title = `${to.meta.title} - CIMS 控制台` || 'CIMS 控制台'; next(); });
 
-export default router
+export default router;
