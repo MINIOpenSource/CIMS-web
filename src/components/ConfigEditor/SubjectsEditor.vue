@@ -19,7 +19,7 @@
             v-model="item.raw.Name"
             variant="underlined"
             density="compact"
-            hide-details
+            hide-details=""
             @update:modelValue="markDirty"
         ></v-text-field>
       </template>
@@ -28,7 +28,7 @@
             v-model="item.raw.Initial"
             variant="underlined"
             density="compact"
-            hide-details
+            hide-details=""
             maxlength="1"
             style="width: 50px;"
             @update:modelValue="markDirty"
@@ -39,7 +39,7 @@
             v-model="item.raw.TeacherName"
             variant="underlined"
             density="compact"
-            hide-details
+            hide-details=""
             @update:modelValue="markDirty"
         ></v-text-field>
       </template>
@@ -67,7 +67,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { VDataTable } from 'vuetify/labs/VDataTable'; // 如果使用 labs
+import { VDataTable } from 'vuetify/components/VDataTable'; // 如果使用 labs
 import { v4 as uuidv4 } from 'uuid'; // 用于生成 UUID
 
 const props = defineProps({

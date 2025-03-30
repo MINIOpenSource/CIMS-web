@@ -14,7 +14,7 @@
             prepend-inner-icon="mdi-magnify"
             variant="solo-filled"
             flat
-            hide-details
+            hide-details=""
             single-line
             class="mr-2"
             style="max-width: 300px;"
