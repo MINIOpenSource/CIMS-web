@@ -48,7 +48,7 @@ import { useAppStore } from '@/store/app';
 
 const drawerModel = ref(true);
 const appStore = useAppStore();
-const webuiVersion = import.meta.env.VITE_WEBUI_VERSION || '1.0v1beta1';
+const webuiVersion = import.meta.env.VITE_WEBUI_VERSION || '1.0v1';
 
 const mainNavItems = ref([
   { title: '概览', icon: 'mdi-view-dashboard-outline', to: { name: 'Overview' } },
