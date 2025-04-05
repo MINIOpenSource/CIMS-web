@@ -15,9 +15,6 @@ cmdClient.interceptors.request.use(requestInterceptor); cmdClient.interceptors.r
 
 export const getManifest = (clientUid) => apiClient.get(`/api/v1/client/${clientUid}/manifest`);
 export const getConfigResource = (resourceType, name) => apiClient.get(`/api/v1/client/${resourceType}`, { params: { name } });
-export const getServerVersion = () => apiClient.get('/api/v1/server/version');
-export const downloadPresetUrl = `${API_BASE_URL}/api/v1/download/preset`;
-export const exportDataUrl = `${API_BASE_URL}/api/v1/export/data`;
 
 export const listConfigFiles = (resourceType) => cmdClient.get(`/command/datas/${resourceType}/list`);
 export const createConfigFile = (resourceType, name) => cmdClient.get(`/command/datas/${resourceType}/create`, { params: { name } });
@@ -37,3 +34,6 @@ export const batchClientAction = (action, client_uids, payload) => cmdClient.pos
 export const restartClient = (clientUid) => cmdClient.post(`/command/client/${clientUid}/restart`);
 export const sendNotification = (clientUid, params) => cmdClient.post(`/command/client/${clientUid}/send_notification`, null, { params });
 export const triggerClientUpdate = (clientUid) => cmdClient.post(`/command/client/${clientUid}/update_data`);
+export const getServerVersion = () => cmdClient.get('/command/server/version');
+export const downloadPresetUrl = `${CMD_BASE_URL}/command/download/preset`;
+export const exportDataUrl = `${CMD_BASE_URL}/command/export/data`;
