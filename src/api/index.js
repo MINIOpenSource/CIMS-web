@@ -35,5 +35,5 @@ export const restartClient = (clientUid) => cmdClient.post(`/command/client/${cl
 export const sendNotification = (clientUid, params) => cmdClient.post(`/command/client/${clientUid}/send_notification`, null, { params });
 export const triggerClientUpdate = (clientUid) => cmdClient.post(`/command/client/${clientUid}/update_data`);
 export const getServerVersion = () => cmdClient.get('/command/server/version');
-export const downloadPresetUrl = `${CMD_BASE_URL}/command/download/preset`;
-export const exportDataUrl = `${CMD_BASE_URL}/command/export/data`;
+export const downloadPresetUrl = `${CMD_BASE_URL}/command/server/ManagementPreset.json`;
+export const exportDataUrl = `${CMD_BASE_URL}/command/server/export`;
