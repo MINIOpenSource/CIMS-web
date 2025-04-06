@@ -66,8 +66,8 @@ const sendingBroadcast = ref(false);
 
 const notification = ref({ message_mask: '', message_content: '', is_emergency: false, duration_seconds: 5, is_speech_enabled: true, is_effect_enabled: true, is_sound_enabled: true, is_topmost: true, repeat_counts: 1, overlay_icon_left: 0, overlay_icon_right: 0 });
 
-const registeredCount = computed(() => dataStore.clients.length);
-const onlineCount = computed(() => dataStore.clients.filter(c => c.status === 'online').length);
+const registeredCount = computed(() => dataStore.clientsStatus.length);
+const onlineCount = computed(() => dataStore.clientsStatus.filter(c => c.status === 'online').length);
 
 const refreshStatus = async () => { loading.value = true; await dataStore.fetchClientStatus(); loading.value = false; };
 const openBroadcastDialog = () => { notification.value = { message_mask: '', message_content: '', is_emergency: false, duration_seconds: 5, is_speech_enabled: true, is_effect_enabled: true, is_sound_enabled: true, is_topmost: true, repeat_counts: 1, overlay_icon_left: 0, overlay_icon_right: 0 }; broadcastDialog.value = true; };
@@ -75,7 +75,7 @@ const sendBroadcastNotification = async () => {
   if (!notification.value.message_mask || !notification.value.message_content) { appStore.setError('通知标题和内容不能为空'); return; }
   sendingBroadcast.value = true;
   try {
-    const onlineClientUids = dataStore.clients.filter(c => c.status === 'online').map(c => c.uid);
+    const onlineClientUids = dataStore.clientsStatus.filter(c => c.status === 'online').map(c => c.uid);
     if (onlineClientUids.length === 0) { appStore.setError('没有在线的客户端可以接收通知'); broadcastDialog.value = false; sendingBroadcast.value = false; return; }
     await batchClientAction('send_notification', onlineClientUids, notification.value);
     appStore.showSnackbar('广播通知已发送', 'success');
