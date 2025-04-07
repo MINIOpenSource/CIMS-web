@@ -236,15 +236,11 @@ const closeDialog = () => {
 const saveItem = async () => {
   saving.value = true;
   try {
-    const dataToSend = {
-      id: editedItem.value.id,
-      config: editedItem.value.config
-    };
     if (isEditing.value) {
-      await updatePreRegisteredClient(dataToSend);
+      await updatePreRegisteredClient(editedItem.value.id, editedItem.value.config);
       appStore.showSnackbar('预注册配置已更新', 'success');
     } else {
-      await preRegisterClient(dataToSend);
+      await preRegisterClient(editedItem.value.id, editedItem.value.config);
       appStore.showSnackbar('预注册条目已创建', 'success');
     }
     closeDialog();

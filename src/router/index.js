@@ -8,13 +8,8 @@ const routes = [
     component: DefaultLayout,
     children: [
       { path: '', name: 'Overview', component: () => import('@/pages/Overview.vue'), meta: { title: '概览' } },
-      {
-        path: 'devices', name: 'DeviceManagement', component: { template: '<router-view />' }, redirect: { name: 'RegisteredDevices' },
-        children: [
-          { path: 'registered', name: 'RegisteredDevices', component: () => import('@/pages/DeviceManagement/RegisteredDevices.vue'), meta: { title: '已注册设备' } },
-          { path: 'pre-registered', name: 'PreRegisteredDevices', component: () => import('@/pages/DeviceManagement/PreRegisteredDevices.vue'), meta: { title: '预注册设备' } }
-        ]
-      },
+      { path: 'registered', name: 'RegisteredDevices', component: () => import('@/pages/RegisteredDevices.vue'), meta: { title: '已注册设备' } },
+      { path: 'pre-registered', name: 'PreRegisteredDevices', component: () => import('@/pages/PreRegisteredDevices.vue'), meta: { title: '预注册设备' } },
       { path: 'configs/:resourceType?', name: 'ConfigManagement', component: () => import('@/pages/ConfigManagement/Index.vue'), props: true, meta: { title: '配置管理' } },
       { path: 'plugins', name: 'PluginManagement', component: () => import('@/pages/PluginManagement.vue'), meta: { title: '插件管理' } },
       { path: 'settings', name: 'Settings', component: () => import('@/pages/Settings.vue'), meta: { title: '服务器设置' } },
