@@ -30,7 +30,7 @@ export const preRegisterClient = (id, config) => cmdClient.post('/command/client
 export const listPreRegisteredClients = () => cmdClient.get('/command/clients/pre_registered/list');
 export const deletePreRegisteredClient = (client_id) => cmdClient.delete('/command/clients/pre_registered/delete', { params: { client_id } });
 export const updatePreRegisteredClient = (id, config) => cmdClient.put('/command/clients/pre_registered/update', { id, config });
-export const batchClientAction = (action, client_uids, payload) => cmdClient.post('/command/clients/batch_action', { action, client_uids, payload });
+export const batchClientAction = (action, client_uids, payload) => cmdClient.post('/command/client/batch_action', { action, client_uids, payload });
 export const restartClient = (clientUid) => cmdClient.post(`/command/client/${clientUid}/restart`);
 export const sendNotification = (clientUid, params) => cmdClient.post(`/command/client/${clientUid}/send_notification`, null, { params });
 export const triggerClientUpdate = (clientUid) => cmdClient.post(`/command/client/${clientUid}/update_data`);
