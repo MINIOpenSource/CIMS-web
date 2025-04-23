@@ -4,7 +4,7 @@
     <v-card class="elevation-2 pa-4">
       <v-card-text>
         <p>点击按钮下载集控预设配置文件。</p>
-        <v-btn color="primary" @click="downloadPreset" :href="downloadUrl" download="cims_preset_config.zip" target="_blank">
+        <v-btn color="primary" @click="downloadPreset" :href="downloadUrl" download="ManagementPreset.json" target="_blank">
           下载预设配置
         </v-btn>
       </v-card-text>
