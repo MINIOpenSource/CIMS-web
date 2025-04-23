@@ -38,7 +38,7 @@
                 @update:modelValue="updateConfig"
             ></v-text-field>
             <v-text-field
-                v-model.number="localConfig.gRPC.port"
+                v-model.number="localConfig.gRPC.mp_port"
                 label="端口 (Port)"
                 type="number"
                 placeholder="50051"
@@ -75,7 +75,7 @@
                 @update:modelValue="updateConfig"
             ></v-text-field>
             <v-text-field
-                v-model.number="localConfig.api.port"
+                v-model.number="localConfig.api.mp_port"
                 label="端口 (Port)"
                 type="number"
                 placeholder="50050"
@@ -112,7 +112,7 @@
                 @update:modelValue="updateConfig"
             ></v-text-field>
             <v-text-field
-                v-model.number="localConfig.command.port"
+                v-model.number="localConfig.command.mp_port"
                 label="端口 (Port)"
                 type="number"
                 placeholder="50052"
@@ -141,9 +141,9 @@ const props = defineProps({
     required: true,
     default: () => ({ // 提供默认结构以避免模板错误
       organization_name: '',
-      gRPC: { prefix: 'http', host: 'localhost', port: 50051 },
-      api: { prefix: 'http', host: 'localhost', port: 50050 },
-      command: { prefix: 'http', host: 'localhost', port: 50052 }
+      gRPC: { prefix: 'http', host: 'localhost', mp_port: 50051 },
+      api: { prefix: 'http', host: 'localhost', mp_port: 50050 },
+      command: { prefix: 'http', host: 'localhost', mp_port: 50052 }
     })
   }
 });
@@ -169,9 +169,9 @@ watch(() => props.configData, (newVal) => {
   // 深拷贝，并确保所有层级都存在
   localConfig.value = JSON.parse(JSON.stringify({
     organization_name: newVal?.organization_name || '',
-    gRPC: { ...(newVal?.gRPC || { prefix: 'http', host: 'localhost', port: 50051 }) },
-    api: { ...(newVal?.api || { prefix: 'http', host: 'localhost', port: 50050 }) },
-    command: { ...(newVal?.command || { prefix: 'http', host: 'localhost', port: 50052 }) }
+    gRPC: { ...(newVal?.gRPC || { prefix: 'http', host: 'localhost', mp_port: 50051 }) },
+    api: { ...(newVal?.api || { prefix: 'http', host: 'localhost', mp_port: 50050 }) },
+    command: { ...(newVal?.command || { prefix: 'http', host: 'localhost', mp_port: 50052 }) }
   }));
   // 重置表单验证状态 (如果需要)
   // if (form.value) {
