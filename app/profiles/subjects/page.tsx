@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { data } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { Subject } from "@/lib/types";
 import {
     Button, Input, Switch, Spinner,
@@ -13,6 +14,7 @@ import { Add24Regular, Delete24Regular, Save24Regular, ArrowSync24Regular } from
 type SubjectsData = Record<string, Subject>;
 
 export default function SubjectsPage() {
+    const { accountId } = useAccount();
     const [fileList, setFileList] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [subjects, setSubjects] = useState<SubjectsData>({});
@@ -25,9 +27,10 @@ export default function SubjectsPage() {
 
     const loadFiles = useCallback(async () => {
         setLoading(true);
-        try { setFileList(await data.list("Subjects")); } catch { setFileList([]); }
+        if (!accountId) return;
+        try { setFileList(await data.list(accountId, "Subjects")); } catch { setFileList([]); }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadFiles(); }, [loadFiles]);
 
@@ -36,7 +39,7 @@ export default function SubjectsPage() {
         setDataLoading(true);
         setMsg(null);
         try {
-            const content = await data.read("Subjects", name);
+            const content = await data.read(accountId, "Subjects", name);
             setSubjects((content as SubjectsData) || {});
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "加载失败" });
@@ -50,7 +53,7 @@ export default function SubjectsPage() {
         setSaving(true);
         setMsg(null);
         try {
-            await data.write("Subjects", selectedFile, subjects);
+            await data.write(accountId, "Subjects", selectedFile, subjects);
             setMsg({ type: "success", text: "科目数据已保存" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "保存失败" });
@@ -62,7 +65,7 @@ export default function SubjectsPage() {
         e.preventDefault();
         if (!newFileName.trim()) return;
         try {
-            await data.create("Subjects", newFileName.trim());
+            await data.create(accountId, "Subjects", newFileName.trim());
             setMsg({ type: "success", text: `文件 "${newFileName}" 已创建` });
             setShowCreate(false);
             setNewFileName("");
@@ -75,7 +78,7 @@ export default function SubjectsPage() {
     async function handleDeleteFile(name: string) {
         if (!confirm(`确定要删除科目文件 "${name}" 吗？`)) return;
         try {
-            await data.deleteData("Subjects", name);
+            await data.deleteData(accountId, "Subjects", name);
             if (selectedFile === name) { setSelectedFile(null); setSubjects({}); }
             loadFiles();
             setMsg({ type: "success", text: "文件已删除" });

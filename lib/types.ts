@@ -224,6 +224,26 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
 };
 
 // ============================================================
+// 系统角色
+// ============================================================
+
+export const SYSTEM_ROLES = {
+    BANNED: "banned",
+    PENDING: "pending",
+    NORMAL: "normal",
+    ADMIN: "admin",
+    SUPERADMIN: "superadmin",
+} as const;
+
+export const ROLE_LABELS: Record<string, string> = {
+    banned: "已封禁",
+    pending: "待激活",
+    normal: "普通用户",
+    admin: "管理员",
+    superadmin: "超级管理员",
+};
+
+// ============================================================
 // ClassIsland 上游数据模型
 // ============================================================
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { clients } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { NotificationPayload, ClientInfo } from "@/lib/types";
 import {
     Button, Input, Spinner, Dialog, DialogSurface, DialogBody,
@@ -15,6 +16,7 @@ import {
 } from "@fluentui/react-icons";
 
 export default function ClientsPage() {
+    const { accountId } = useAccount();
     const [clientList, setClientList] = useState<string[]>([]);
     const [statusMap, setStatusMap] = useState<Record<string, unknown>>({});
     const [loading, setLoading] = useState(true);
@@ -33,14 +35,15 @@ export default function ClientsPage() {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [cl, st] = await Promise.allSettled([clients.list(), clients.status()]);
+            if (!accountId) return;
+            const [cl, st] = await Promise.allSettled([clients.list(accountId), clients.status(accountId)]);
             setClientList(cl.status === "fulfilled" ? (cl.value as string[]) : []);
             if (st.status === "fulfilled" && st.value && typeof st.value === "object") {
                 setStatusMap(st.value as Record<string, unknown>);
             }
         } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -48,7 +51,7 @@ export default function ClientsPage() {
         setSelectedUid(uid);
         setDetailLoading(true);
         try {
-            const detail = await clients.details(uid);
+            const detail = await clients.details(accountId, uid);
             setClientDetail(detail as ClientInfo);
         } catch { setClientDetail(null); }
         setDetailLoading(false);
@@ -57,7 +60,7 @@ export default function ClientsPage() {
     async function handleRestart(uid: string) {
         setActionLoading(uid);
         try {
-            await clients.restart(uid);
+            await clients.restart(accountId, uid);
             setMsg({ type: "success", text: `已向 ${uid} 发送重启指令` });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "操作失败" });
@@ -68,7 +71,7 @@ export default function ClientsPage() {
     async function handleSync(uid: string) {
         setActionLoading(uid);
         try {
-            await clients.forceSync(uid);
+            await clients.forceSync(accountId, uid);
             setMsg({ type: "success", text: `已向 ${uid} 发送同步指令` });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "操作失败" });
@@ -79,7 +82,7 @@ export default function ClientsPage() {
     async function handleSendNotification() {
         if (!showNotify) return;
         try {
-            await clients.sendNotification(showNotify, notifyForm);
+            await clients.sendNotification(accountId, showNotify, notifyForm);
             setMsg({ type: "success", text: "通知已推送" });
             setShowNotify(null);
         } catch (err: unknown) {
@@ -147,7 +150,7 @@ export default function ClientsPage() {
                                             <Button appearance="subtle" size="small" icon={<Settings24Regular />}
                                                 onClick={async () => {
                                                     try {
-                                                        const cfg = await clients.getConfig(uid, 0);
+                                                        const cfg = await clients.getConfig(accountId, uid, 0);
                                                         alert(JSON.stringify(cfg, null, 2));
                                                     } catch (e: unknown) { alert(e instanceof Error ? e.message : "获取失败"); }
                                                 }}>配置</Button>

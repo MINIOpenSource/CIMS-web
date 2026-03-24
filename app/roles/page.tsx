@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { roles } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { RoleOut } from "@/lib/types";
 import {
     Button, Input, Spinner, Dialog, DialogSurface, DialogBody,
@@ -11,6 +12,7 @@ import {
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 
 export default function RolesPage() {
+    const { accountId } = useAccount();
     const [roleList, setRoleList] = useState<RoleOut[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreate, setShowCreate] = useState(false);
@@ -22,9 +24,10 @@ export default function RolesPage() {
 
     const loadData = useCallback(async () => {
         setLoading(true);
-        try { setRoleList(await roles.list()); } catch { /* ignore */ }
+        if (!accountId) return;
+        try { setRoleList(await roles.list(accountId)); } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -33,7 +36,7 @@ export default function RolesPage() {
         setSaving(true);
         setMsg(null);
         try {
-            await roles.create({ code, label, priority: parseInt(priority) || 0 });
+            await roles.create(accountId, { code, label, priority: parseInt(priority) || 0 });
             setMsg({ type: "success", text: "角色创建成功" });
             setShowCreate(false);
             setCode(""); setLabel(""); setPriority("0");
@@ -47,7 +50,7 @@ export default function RolesPage() {
     async function handleDelete(roleCode: string) {
         if (!confirm(`确定要删除角色 "${roleCode}" 吗？`)) return;
         try {
-            await roles.delete(roleCode);
+            await roles.delete(accountId, roleCode);
             setMsg({ type: "success", text: "角色已删除" });
             loadData();
         } catch (err: unknown) {

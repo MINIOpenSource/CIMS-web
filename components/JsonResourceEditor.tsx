@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { data } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { ResourceType } from "@/lib/types";
 import {
     Button, Input, Spinner, Textarea,
@@ -21,6 +22,7 @@ export default function JsonResourceEditor({
     title: string;
     subtitle: string;
 }) {
+    const { accountId } = useAccount();
     const [fileList, setFileList] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [jsonContent, setJsonContent] = useState("");
@@ -34,9 +36,10 @@ export default function JsonResourceEditor({
 
     const loadFiles = useCallback(async () => {
         setLoading(true);
-        try { setFileList(await data.list(resourceType)); } catch { setFileList([]); }
+        if (!accountId) return;
+        try { setFileList(await data.list(accountId, resourceType)); } catch { setFileList([]); }
         setLoading(false);
-    }, [resourceType]);
+    }, [resourceType, accountId]);
 
     useEffect(() => { loadFiles(); }, [loadFiles]);
 
@@ -46,7 +49,7 @@ export default function JsonResourceEditor({
         setMsg(null);
         setParseError(null);
         try {
-            const content = await data.read(resourceType, name);
+            const content = await data.read(accountId, resourceType, name);
             setJsonContent(JSON.stringify(content, null, 2));
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "加载失败" });
@@ -71,7 +74,7 @@ export default function JsonResourceEditor({
         setMsg(null);
         try {
             const parsed = JSON.parse(jsonContent);
-            await data.write(resourceType, selectedFile, parsed);
+            await data.write(accountId, resourceType, selectedFile, parsed);
             setMsg({ type: "success", text: "数据已保存" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "保存失败" });
@@ -82,7 +85,7 @@ export default function JsonResourceEditor({
     async function handleCreateFile(e: React.FormEvent) {
         e.preventDefault();
         try {
-            await data.create(resourceType, newFileName.trim());
+            await data.create(accountId, resourceType, newFileName.trim());
             setShowCreate(false); setNewFileName(""); loadFiles();
             setMsg({ type: "success", text: "文件已创建" });
         } catch (err: unknown) {
@@ -93,7 +96,7 @@ export default function JsonResourceEditor({
     async function handleDeleteFile(name: string) {
         if (!confirm(`确定删除 "${name}"？`)) return;
         try {
-            await data.deleteData(resourceType, name);
+            await data.deleteData(accountId, resourceType, name);
             if (selectedFile === name) { setSelectedFile(null); setJsonContent(""); }
             loadFiles();
         } catch (err: unknown) {

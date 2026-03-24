@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { data } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { ManagementPolicy } from "@/lib/types";
 import {
     Button, Switch, Spinner,
@@ -23,6 +24,7 @@ const POLICY_FIELDS: { key: keyof ManagementPolicy; label: string; hint: string 
 ];
 
 export default function PolicyPage() {
+    const { accountId } = useAccount();
     const [fileList, setFileList] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [policy, setPolicy] = useState<ManagementPolicy>({});
@@ -35,9 +37,10 @@ export default function PolicyPage() {
 
     const loadFiles = useCallback(async () => {
         setLoading(true);
-        try { setFileList(await data.list("Policy")); } catch { setFileList([]); }
+        if (!accountId) return;
+        try { setFileList(await data.list(accountId, "Policy")); } catch { setFileList([]); }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadFiles(); }, [loadFiles]);
 
@@ -46,7 +49,7 @@ export default function PolicyPage() {
         setDataLoading(true);
         setMsg(null);
         try {
-            const content = await data.read("Policy", name);
+            const content = await data.read(accountId, "Policy", name);
             setPolicy((content as ManagementPolicy) || {});
         } catch { setPolicy({}); }
         setDataLoading(false);
@@ -57,7 +60,7 @@ export default function PolicyPage() {
         setSaving(true);
         setMsg(null);
         try {
-            await data.write("Policy", selectedFile, policy);
+            await data.write(accountId, "Policy", selectedFile, policy);
             setMsg({ type: "success", text: "策略已保存" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "保存失败" });
@@ -68,7 +71,7 @@ export default function PolicyPage() {
     async function handleCreateFile(e: React.FormEvent) {
         e.preventDefault();
         try {
-            await data.create("Policy", newFileName.trim());
+            await data.create(accountId, "Policy", newFileName.trim());
             setShowCreate(false); setNewFileName(""); loadFiles();
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "创建失败" });
@@ -78,7 +81,7 @@ export default function PolicyPage() {
     async function handleDeleteFile(name: string) {
         if (!confirm(`确定删除 "${name}"？`)) return;
         try {
-            await data.deleteData("Policy", name);
+            await data.deleteData(accountId, "Policy", name);
             if (selectedFile === name) setSelectedFile(null);
             loadFiles();
         } catch (err: unknown) {

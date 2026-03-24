@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useAccount } from "@/lib/account-context";
 import { useRouter } from "next/navigation";
-import { clients, data, pairing, users } from "@/lib/api";
+import { clients, data, pairing } from "@/lib/api";
 import type { ResourceType } from "@/lib/types";
 import {
   PlugConnected24Regular, People24Regular,
@@ -28,10 +29,10 @@ function StatCard({
 
 export default function DashboardPage() {
   const { isAuthenticated } = useAuth();
+  const { accountId } = useAccount();
   const router = useRouter();
   const [stats, setStats] = useState({
     clientCount: "-",
-    userCount: "-",
     pairingCount: "-",
     resourceCount: "-",
   });
@@ -41,22 +42,22 @@ export default function DashboardPage() {
       router.push("/login");
       return;
     }
-    loadStats();
-  }, [isAuthenticated, router]);
+    if (accountId) loadStats();
+  }, [isAuthenticated, accountId, router]);
 
   async function loadStats() {
+    if (!accountId) return;
     try {
-      const [cl, usr, pr] = await Promise.allSettled([
-        clients.list(),
-        users.list(0, 1),
-        pairing.listCodes(),
+      const [cl, pr] = await Promise.allSettled([
+        clients.list(accountId),
+        pairing.listCodes(accountId),
       ]);
       const resourceTypes: ResourceType[] = [
         "ClassPlan", "TimeLayout", "Subjects", "Policy",
         "DefaultSettings", "Components", "Credentials",
       ];
       const resourceResults = await Promise.allSettled(
-        resourceTypes.map(t => data.list(t))
+        resourceTypes.map(t => data.list(accountId, t))
       );
       let totalRes = 0;
       resourceResults.forEach(r => {
@@ -67,7 +68,6 @@ export default function DashboardPage() {
 
       setStats({
         clientCount: cl.status === "fulfilled" && Array.isArray(cl.value) ? String(cl.value.length) : "0",
-        userCount: usr.status === "fulfilled" && Array.isArray(usr.value) ? String(usr.value.length) : "0",
         pairingCount: pr.status === "fulfilled" ? String(pr.value.codes?.length || 0) : "0",
         resourceCount: String(totalRes),
       });
@@ -92,12 +92,6 @@ export default function DashboardPage() {
           icon={<PlugConnected24Regular />}
           label="已注册客户端"
           value={stats.clientCount}
-        />
-        <StatCard
-          icon={<People24Regular />}
-          label="用户数"
-          value={stats.userCount}
-          color="var(--success-color)"
         />
         <StatCard
           icon={<Link24Regular />}

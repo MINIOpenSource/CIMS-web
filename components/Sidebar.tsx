@@ -73,7 +73,7 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-header">
-                <div className="sidebar-logo">CI</div>
+                <img src="/logo.svg" alt="ClassIsland" className="sidebar-logo" />
                 <div className="sidebar-title">CIMS 管理面板</div>
             </div>
             <nav className="sidebar-nav">

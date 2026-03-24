@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { pairing } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { PairingCodeDetail } from "@/lib/types";
 import {
     Button, Spinner, Switch,
@@ -10,6 +11,7 @@ import {
 import { Checkmark24Regular, Delete24Regular } from "@fluentui/react-icons";
 
 export default function PairingPage() {
+    const { accountId } = useAccount();
     const [codes, setCodes] = useState<PairingCodeDetail[]>([]);
     const [loading, setLoading] = useState(true);
     const [pairingEnabled, setPairingEnabled] = useState(true);
@@ -18,17 +20,18 @@ export default function PairingPage() {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await pairing.listCodes();
+            if (!accountId) return;
+            const res = await pairing.listCodes(accountId);
             setCodes(res.codes || []);
         } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
     async function handleApprove(code: string) {
         try {
-            await pairing.approve(code);
+            await pairing.approve(accountId, code);
             setMsg({ type: "success", text: `配对码 ${code} 已审批` });
             loadData();
         } catch (err: unknown) {
@@ -39,7 +42,7 @@ export default function PairingPage() {
     async function handleDelete(code: string) {
         if (!confirm(`确定要删除配对码 "${code}" 吗？`)) return;
         try {
-            await pairing.deleteCode(code);
+            await pairing.deleteCode(accountId, code);
             setMsg({ type: "success", text: "配对码已删除" });
             loadData();
         } catch (err: unknown) {
@@ -49,7 +52,7 @@ export default function PairingPage() {
 
     async function handleToggle(enabled: boolean) {
         try {
-            await pairing.toggle({ enabled });
+            await pairing.toggle(accountId, { enabled });
             setPairingEnabled(enabled);
             setMsg({ type: "success", text: `配对功能已${enabled ? "启用" : "禁用"}` });
         } catch (err: unknown) {

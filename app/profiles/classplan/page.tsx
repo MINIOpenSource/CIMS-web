@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { data } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { ClassPlan, ClassInfo, TimeLayout, Subject, TimeRule, TimeType } from "@/lib/types";
 import { TIME_TYPE_LABELS, WEEKDAY_LABELS } from "@/lib/types";
 import {
@@ -22,6 +23,7 @@ function formatTime(ts: string): string {
 }
 
 export default function ClassPlanPage() {
+    const { accountId } = useAccount();
     const [fileList, setFileList] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [plans, setPlans] = useState<ClassPlansData>({});
@@ -37,30 +39,31 @@ export default function ClassPlanPage() {
 
     const loadFiles = useCallback(async () => {
         setLoading(true);
-        try { setFileList(await data.list("ClassPlan")); } catch { setFileList([]); }
+        if (!accountId) return;
+        try { setFileList(await data.list(accountId, "ClassPlan")); } catch { setFileList([]); }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadFiles(); }, [loadFiles]);
 
     // 同时加载 TimeLayout 和 Subjects 数据
     const loadRelatedData = useCallback(async () => {
+        if (!accountId) return;
         try {
             const [tlFiles, subFiles] = await Promise.all([
-                data.list("TimeLayout"),
-                data.list("Subjects"),
+                data.list(accountId, "TimeLayout"),
+                data.list(accountId, "Subjects"),
             ]);
-            // 加载第一个时间表和科目文件
             if (tlFiles.length > 0) {
-                const tlData = await data.read("TimeLayout", tlFiles[0]);
+                const tlData = await data.read(accountId, "TimeLayout", tlFiles[0]);
                 setTimeLayouts((tlData as TimeLayoutsData) || {});
             }
             if (subFiles.length > 0) {
-                const subData = await data.read("Subjects", subFiles[0]);
+                const subData = await data.read(accountId, "Subjects", subFiles[0]);
                 setSubjects((subData as SubjectsData) || {});
             }
         } catch { /* ignore */ }
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadRelatedData(); }, [loadRelatedData]);
 
@@ -69,7 +72,7 @@ export default function ClassPlanPage() {
         setSelectedPlanId(null);
         setDataLoading(true);
         try {
-            const content = await data.read("ClassPlan", name);
+            const content = await data.read(accountId, "ClassPlan", name);
             setPlans((content as ClassPlansData) || {});
         } catch { setPlans({}); }
         setDataLoading(false);
@@ -80,7 +83,7 @@ export default function ClassPlanPage() {
         setSaving(true);
         setMsg(null);
         try {
-            await data.write("ClassPlan", selectedFile, plans);
+            await data.write(accountId, "ClassPlan", selectedFile, plans);
             setMsg({ type: "success", text: "课表数据已保存" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "保存失败" });
@@ -92,7 +95,7 @@ export default function ClassPlanPage() {
         e.preventDefault();
         if (!newFileName.trim()) return;
         try {
-            await data.create("ClassPlan", newFileName.trim());
+            await data.create(accountId, "ClassPlan", newFileName.trim());
             setShowCreate(false); setNewFileName(""); loadFiles();
             setMsg({ type: "success", text: "文件已创建" });
         } catch (err: unknown) {
@@ -103,7 +106,7 @@ export default function ClassPlanPage() {
     async function handleDeleteFile(name: string) {
         if (!confirm(`确定删除 "${name}"？`)) return;
         try {
-            await data.deleteData("ClassPlan", name);
+            await data.deleteData(accountId, "ClassPlan", name);
             if (selectedFile === name) { setSelectedFile(null); setPlans({}); }
             loadFiles();
         } catch (err: unknown) {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { permissions } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { PermissionDefOut } from "@/lib/types";
 import {
     Button, Input, Spinner,
@@ -10,6 +11,7 @@ import {
 import { Checkmark24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 
 export default function PermissionsPage() {
+    const { accountId } = useAccount();
     const [defs, setDefs] = useState<PermissionDefOut[]>([]);
     const [loading, setLoading] = useState(true);
     const [memberId, setMemberId] = useState("");
@@ -19,9 +21,10 @@ export default function PermissionsPage() {
 
     const loadDefs = useCallback(async () => {
         setLoading(true);
-        try { setDefs(await permissions.listDefs()); } catch { /* ignore */ }
+        if (!accountId) return;
+        try { setDefs(await permissions.listDefs(accountId)); } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadDefs(); }, [loadDefs]);
 
@@ -32,7 +35,7 @@ export default function PermissionsPage() {
         setActionLoading(true);
         setMsg(null);
         try {
-            await permissions.grant({ member_id: memberId, permission_code: selectedPerm, granted });
+            await permissions.grant(accountId, { member_id: memberId, permission_code: selectedPerm, granted });
             setMsg({ type: "success", text: `权限已${granted ? "授予" : "拒绝"}` });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "操作失败" });
@@ -45,7 +48,7 @@ export default function PermissionsPage() {
         setActionLoading(true);
         setMsg(null);
         try {
-            await permissions.revoke({ member_id: memberId, permission_code: selectedPerm });
+            await permissions.revoke(accountId, { member_id: memberId, permission_code: selectedPerm });
             setMsg({ type: "success", text: "权限覆盖已撤销" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "操作失败" });

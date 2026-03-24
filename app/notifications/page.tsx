@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { clients } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { NotificationPayload } from "@/lib/types";
 import {
     Button, Input, Spinner, Select, Switch, Textarea,
@@ -10,6 +11,7 @@ import {
 import { Send24Regular } from "@fluentui/react-icons";
 
 export default function NotificationsPage() {
+    const { accountId } = useAccount();
     const [clientList, setClientList] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedClient, setSelectedClient] = useState("");
@@ -25,9 +27,10 @@ export default function NotificationsPage() {
 
     const load = useCallback(async () => {
         setLoading(true);
-        try { setClientList(await clients.list() as string[]); } catch { /* ignore */ }
+        if (!accountId) return;
+        try { setClientList(await clients.list(accountId) as string[]); } catch { /* ignore */ }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -37,7 +40,7 @@ export default function NotificationsPage() {
         setSending(true);
         setMsg(null);
         try {
-            await clients.sendNotification(selectedClient, form);
+            await clients.sendNotification(accountId, selectedClient, form);
             setMsg({ type: "success", text: `通知已推送至 ${selectedClient}` });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "推送失败" });
@@ -52,7 +55,7 @@ export default function NotificationsPage() {
         let success = 0, fail = 0;
         for (const uid of clientList) {
             try {
-                await clients.sendNotification(uid, form);
+                await clients.sendNotification(accountId, uid, form);
                 success++;
             } catch { fail++; }
         }

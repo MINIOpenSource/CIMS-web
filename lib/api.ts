@@ -1,5 +1,6 @@
 /* ===== API 客户端层 ===== */
 /* 统一封装所有后端接口调用，Bearer Token 自动注入 */
+/* 三端点架构：Management API / Admin API / Client API */
 
 import type {
     UserRegisterRequest, UserLoginRequest, TokenResponse,
@@ -15,15 +16,21 @@ import type {
 } from "./types";
 
 // ============================================================
-// 服务器地址（从环境变量读取，写死在 .env 中）
-// Admin API (50051) 和 Client API (50050) 是分离的
+// 服务器地址（从环境变量读取）
+// Management API (27042) / Admin API (27043) / Client API (27041)
 // ============================================================
 
 const STORAGE_KEY_TOKEN = "cims_auth_token";
 
-/** Admin API 地址（管理端点、command 端点） */
+/** Management API 地址（认证、账户内操作） */
 export function getServerUrl(): string {
     const url = process.env.NEXT_PUBLIC_CIMS_ENDPOINT || "";
+    return url.replace(/\/+$/, "");
+}
+
+/** Admin API 地址（超管端点） */
+export function getAdminUrl(): string {
+    const url = process.env.NEXT_PUBLIC_CIMS_ADMIN_ENDPOINT || "";
     return url.replace(/\/+$/, "");
 }
 
@@ -60,6 +67,16 @@ export class ApiError extends Error {
     }
 }
 
+/**
+ * 401 时触发全局事件，供 AuthProvider 拦截并显示内联登录卡片。
+ * 不再硬跳转 /login，保留用户上下文。
+ */
+function emitAuthExpired(): void {
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("cims:auth-expired"));
+    }
+}
+
 async function request<T>(
     path: string,
     options: RequestInit = {},
@@ -82,10 +99,7 @@ async function request<T>(
     const res = await fetch(`${base}${path}`, { ...options, headers });
 
     if (res.status === 401) {
-        clearToken();
-        if (typeof window !== "undefined") {
-            window.location.href = "/login";
-        }
+        emitAuthExpired();
         throw new ApiError(401, "未授权，请重新登录");
     }
 
@@ -100,196 +114,191 @@ async function request<T>(
     return JSON.parse(text) as T;
 }
 
-function get<T>(path: string): Promise<T> {
-    return request<T>(path, { method: "GET" });
+function get<T>(path: string, base?: string): Promise<T> {
+    return request<T>(path, { method: "GET" }, base);
 }
 
-function post<T>(path: string, body?: unknown): Promise<T> {
+function post<T>(path: string, body?: unknown, base?: string): Promise<T> {
     return request<T>(path, {
         method: "POST",
         body: body ? JSON.stringify(body) : undefined,
-    });
+    }, base);
 }
 
-function put<T>(path: string, body?: unknown): Promise<T> {
+function put<T>(path: string, body?: unknown, base?: string): Promise<T> {
     return request<T>(path, {
         method: "PUT",
         body: body ? JSON.stringify(body) : undefined,
-    });
+    }, base);
 }
 
-function patch<T>(path: string, body?: unknown): Promise<T> {
+function patch<T>(path: string, body?: unknown, base?: string): Promise<T> {
     return request<T>(path, {
         method: "PATCH",
         body: body ? JSON.stringify(body) : undefined,
-    });
+    }, base);
 }
 
-function del<T>(path: string): Promise<T> {
-    return request<T>(path, { method: "DELETE" });
+function del<T>(path: string, base?: string): Promise<T> {
+    return request<T>(path, { method: "DELETE" }, base);
+}
+
+/** 编码账户内路径前缀 */
+function acctPath(accountId: string): string {
+    return `/accounts/${encodeURIComponent(accountId)}`;
 }
 
 // ============================================================
-// Auth
+// Auth (Management API: /auth/*)
 // ============================================================
 
 export const auth = {
     register: (data: UserRegisterRequest) =>
-        post<TokenResponse>("/admin/auth/register", data),
+        post<TokenResponse>("/auth/register", data),
 
     login: (data: UserLoginRequest) =>
-        post<LoginResult>("/admin/auth/login", data),
+        post<LoginResult>("/auth/login", data),
 
     logout: () =>
-        post<MessageResponse>("/admin/auth/logout"),
+        post<MessageResponse>("/auth/logout"),
 };
 
 // ============================================================
-// 2FA
+// 2FA (Management API: /auth/2fa/*)
 // ============================================================
 
 export const twoFA = {
     enable: () =>
-        post<TotpEnableResponse>("/admin/admin/auth/2fa/enable"),
+        post<TotpEnableResponse>("/auth/2fa/enable"),
 
     confirm: (data: TotpConfirmRequest) =>
-        post<unknown>("/admin/admin/auth/2fa/confirm", data),
+        post<unknown>("/auth/2fa/confirm", data),
 
     disable: (data: TotpDisableRequest) =>
-        post<unknown>("/admin/admin/auth/2fa/disable", data),
+        post<unknown>("/auth/2fa/disable", data),
 
     verify: (data: TotpVerifyRequest) =>
-        post<TokenResponse>("/admin/admin/auth/2fa/verify", data),
+        post<TokenResponse>("/auth/2fa/verify", data),
 
     recover: (data: TotpRecoverRequest) =>
-        post<TokenResponse>("/admin/admin/auth/2fa/recover", data),
+        post<TokenResponse>("/auth/2fa/recover", data),
 };
 
 // ============================================================
-// Users
-// ============================================================
-
-export const users = {
-    list: (offset = 0, limit = 20) =>
-        get<UserOut[]>(`/admin/users?offset=${offset}&limit=${limit}`),
-
-    getById: (userId: string) =>
-        get<UserOut>(`/admin/users/${encodeURIComponent(userId)}`),
-
-    update: (userId: string, data: UserUpdateRequest) =>
-        patch<UserOut>(`/admin/users/${encodeURIComponent(userId)}`, data),
-};
-
-// ============================================================
-// Roles
-// ============================================================
-
-export const roles = {
-    list: () =>
-        get<RoleOut[]>("/admin/roles"),
-
-    create: (data: RoleCreateRequest) =>
-        post<RoleOut>("/admin/roles", data),
-
-    delete: (code: string) =>
-        del<unknown>(`/admin/roles/${encodeURIComponent(code)}`),
-};
-
-// ============================================================
-// Accounts
+// Accounts (Management API: /accounts)
 // ============================================================
 
 export const accounts = {
+    /** 列出当前用户有权访问的所有账户 */
     list: () =>
-        get<AccountOut[]>("/admin/accounts"),
+        get<AccountOut[]>("/accounts"),
 
-    getById: (accountId: string) =>
-        get<AccountOut>(`/admin/accounts/${encodeURIComponent(accountId)}`),
+    /** 下载 ManagementPreset.json */
+    downloadPreset: (accountId: string, classIdentity?: string) => {
+        let url = `${acctPath(accountId)}/preset`;
+        if (classIdentity) url += `?class_identity=${encodeURIComponent(classIdentity)}`;
+        return get<unknown>(url);
+    },
 };
 
 // ============================================================
-// Quotas
+// Roles (Management API: /accounts/{accountId}/roles)
+// ============================================================
+
+export const roles = {
+    list: (accountId: string) =>
+        get<RoleOut[]>(`${acctPath(accountId)}/roles`),
+
+    create: (accountId: string, data: RoleCreateRequest) =>
+        post<RoleOut>(`${acctPath(accountId)}/roles`, data),
+
+    delete: (accountId: string, code: string) =>
+        del<unknown>(`${acctPath(accountId)}/roles/${encodeURIComponent(code)}`),
+};
+
+// ============================================================
+// Quotas (Management API: /accounts/{accountId}/quotas)
 // ============================================================
 
 export const quotas = {
     list: (accountId: string) =>
-        get<QuotaOut[]>(`/admin/quotas/${encodeURIComponent(accountId)}`),
+        get<QuotaOut[]>(`${acctPath(accountId)}/quotas`),
 
     update: (accountId: string, data: QuotaSetRequest) =>
-        put<QuotaOut>(`/admin/quotas/${encodeURIComponent(accountId)}`, data),
+        put<QuotaOut>(`${acctPath(accountId)}/quotas`, data),
 };
 
 // ============================================================
-// Permissions
+// Permissions (Management API: /accounts/{accountId}/permissions)
 // ============================================================
 
 export const permissions = {
-    listDefs: () =>
-        get<PermissionDefOut[]>("/admin/permissions/defs"),
+    listDefs: (accountId: string) =>
+        get<PermissionDefOut[]>(`${acctPath(accountId)}/permissions/defs`),
 
-    grant: (data: PermissionGrantRequest) =>
-        post<unknown>("/admin/permissions/grant", data),
+    grant: (accountId: string, data: PermissionGrantRequest) =>
+        post<unknown>(`${acctPath(accountId)}/permissions/grant`, data),
 
-    revoke: (data: PermissionRevokeRequest) =>
-        post<unknown>("/admin/permissions/revoke", data),
+    revoke: (accountId: string, data: PermissionRevokeRequest) =>
+        post<unknown>(`${acctPath(accountId)}/permissions/revoke`, data),
 };
 
 // ============================================================
-// Pairing
+// Pairing (Management API: /accounts/{accountId}/pairing)
 // ============================================================
 
 export const pairing = {
-    listCodes: () =>
-        get<PairingListResponse>("/admin/pairing/codes"),
+    listCodes: (accountId: string) =>
+        get<PairingListResponse>(`${acctPath(accountId)}/pairing/codes`),
 
-    getCode: (code: string) =>
-        get<PairingCodeDetail>(`/admin/pairing/codes/${encodeURIComponent(code)}`),
+    getCode: (accountId: string, code: string) =>
+        get<PairingCodeDetail>(`${acctPath(accountId)}/pairing/codes/${encodeURIComponent(code)}`),
 
-    deleteCode: (code: string) =>
-        del<unknown>(`/admin/pairing/codes/${encodeURIComponent(code)}`),
+    deleteCode: (accountId: string, code: string) =>
+        del<unknown>(`${acctPath(accountId)}/pairing/codes/${encodeURIComponent(code)}`),
 
-    approve: (code: string) =>
-        post<unknown>(`/admin/pairing/approve/${encodeURIComponent(code)}`),
+    approve: (accountId: string, code: string) =>
+        post<unknown>(`${acctPath(accountId)}/pairing/approve/${encodeURIComponent(code)}`),
 
-    toggle: (data: PairingToggle) =>
-        put<unknown>("/admin/pairing/toggle", data),
+    toggle: (accountId: string, data: PairingToggle) =>
+        put<unknown>(`${acctPath(accountId)}/pairing/toggle`, data),
 };
 
 // ============================================================
-// Data（资源 CRUD）
+// Data（资源 CRUD, Management API: /accounts/{accountId}/command/datas/*)
 // ============================================================
 
 export const data = {
-    create: (type: ResourceType, name: string) =>
-        get<StatusResponse>(`/command/datas/${type}/create?name=${encodeURIComponent(name)}`),
+    create: (accountId: string, type: ResourceType, name: string) =>
+        get<StatusResponse>(`${acctPath(accountId)}/command/datas/${type}/create?name=${encodeURIComponent(name)}`),
 
-    list: (type: ResourceType) =>
-        get<string[]>(`/command/datas/${type}/list`),
+    list: (accountId: string, type: ResourceType) =>
+        get<string[]>(`${acctPath(accountId)}/command/datas/${type}/list`),
 
-    deleteData: (type: ResourceType, name: string) =>
-        get<StatusResponse>(`/command/datas/${type}/delete?name=${encodeURIComponent(name)}`),
+    deleteData: (accountId: string, type: ResourceType, name: string) =>
+        get<StatusResponse>(`${acctPath(accountId)}/command/datas/${type}/delete?name=${encodeURIComponent(name)}`),
 
-    getToken: (type: ResourceType, name: string) =>
-        get<{ token: string }>(`/command/datas/${type}/token?name=${encodeURIComponent(name)}`),
+    getToken: (accountId: string, type: ResourceType, name: string) =>
+        get<{ token: string }>(`${acctPath(accountId)}/command/datas/${type}/token?name=${encodeURIComponent(name)}`),
 
-    write: (type: ResourceType, name: string, payload: unknown, version?: number) => {
-        let url = `/command/datas/${type}/write?name=${encodeURIComponent(name)}`;
+    write: (accountId: string, type: ResourceType, name: string, payload: unknown, version?: number) => {
+        let url = `${acctPath(accountId)}/command/datas/${type}/write?name=${encodeURIComponent(name)}`;
         if (version !== undefined) url += `&version=${version}`;
         return put<StatusResponse>(url, payload);
     },
 
-    update: (type: ResourceType, name: string, payload: unknown, version?: number) => {
-        let url = `/command/datas/${type}/update?name=${encodeURIComponent(name)}`;
+    update: (accountId: string, type: ResourceType, name: string, payload: unknown, version?: number) => {
+        let url = `${acctPath(accountId)}/command/datas/${type}/update?name=${encodeURIComponent(name)}`;
         if (version !== undefined) url += `&version=${version}`;
         return patch<StatusResponse>(url, payload);
     },
 
-    batch: (ops: BatchRequest) =>
-        post<unknown>("/command/datas/batch", ops),
+    batch: (accountId: string, ops: BatchRequest) =>
+        post<unknown>(`${acctPath(accountId)}/command/datas/batch`, ops),
 
     /** 获取资源内容：先获取 token，再请求 Client API /get?token=xxx */
-    async read(type: ResourceType, name: string): Promise<unknown> {
-        const { token } = await this.getToken(type, name);
+    async read(accountId: string, type: ResourceType, name: string): Promise<unknown> {
+        const { token } = await this.getToken(accountId, type, name);
         const clientBase = getClientUrl();
         if (!clientBase) throw new Error("未配置 Client API 地址");
         const res = await fetch(`${clientBase}/get?token=${encodeURIComponent(token)}`);
@@ -301,28 +310,72 @@ export const data = {
 };
 
 // ============================================================
-// Clients
+// Clients (Management API: /accounts/{accountId}/command/clients/*)
 // ============================================================
 
 export const clients = {
-    list: () =>
-        get<string[]>("/command/clients/list"),
+    list: (accountId: string) =>
+        get<string[]>(`${acctPath(accountId)}/command/clients/list`),
 
-    status: () =>
-        get<unknown>("/command/clients/status"),
+    status: (accountId: string) =>
+        get<unknown>(`${acctPath(accountId)}/command/clients/status`),
 
-    details: (uid: string) =>
-        get<unknown>(`/command/client/${encodeURIComponent(uid)}/details`),
+    details: (accountId: string, uid: string) =>
+        get<unknown>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/details`),
 
-    restart: (uid: string) =>
-        get<StatusResponse>(`/command/client/${encodeURIComponent(uid)}/restart`),
+    restart: (accountId: string, uid: string) =>
+        get<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/restart`),
 
-    forceSync: (uid: string) =>
-        get<StatusResponse>(`/command/client/${encodeURIComponent(uid)}/update_data`),
+    forceSync: (accountId: string, uid: string) =>
+        get<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/update_data`),
 
-    sendNotification: (uid: string, payload: NotificationPayload) =>
-        post<StatusResponse>(`/command/client/${encodeURIComponent(uid)}/send_notification`, payload),
+    sendNotification: (accountId: string, uid: string, payload: NotificationPayload) =>
+        post<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/send_notification`, payload),
 
-    getConfig: (uid: string, configType: number) =>
-        get<unknown>(`/command/client/${encodeURIComponent(uid)}/get_config?config_type=${configType}`),
+    getConfig: (accountId: string, uid: string, configType: number) =>
+        get<unknown>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/get_config?config_type=${configType}`),
+};
+
+// ============================================================
+// Admin API（超管专用，使用 Admin 端点）
+// ============================================================
+
+const adminBase = () => getAdminUrl();
+
+export const adminApi = {
+    /** 列出所有账户 */
+    listAccounts: () =>
+        get<AccountOut[]>("/admin/accounts", adminBase()),
+
+    /** 查询单个账户 */
+    getAccount: (accountId: string) =>
+        get<AccountOut>(`/admin/accounts/${encodeURIComponent(accountId)}`, adminBase()),
+
+    /** 列出所有用户（分页） */
+    listUsers: (offset = 0, limit = 20) =>
+        get<UserOut[]>(`/admin/users?offset=${offset}&limit=${limit}`, adminBase()),
+
+    /** 查询单个用户 */
+    getUser: (userId: string) =>
+        get<UserOut>(`/admin/users/${encodeURIComponent(userId)}`, adminBase()),
+
+    /** 更新用户 */
+    updateUser: (userId: string, data: UserUpdateRequest) =>
+        patch<UserOut>(`/admin/users/${encodeURIComponent(userId)}`, data, adminBase()),
+
+    /**
+     * 探测当前 token 是否有超管权限。
+     * 成功返回 true, 403 返回 false, 其它错误抛出。
+     */
+    async probeSuperAdmin(): Promise<boolean> {
+        try {
+            await get<unknown>("/", adminBase());
+            return true;
+        } catch (e) {
+            if (e instanceof ApiError && (e.status === 403 || e.status === 401)) {
+                return false;
+            }
+            return false;
+        }
+    },
 };

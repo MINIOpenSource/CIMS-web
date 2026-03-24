@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { data } from "@/lib/api";
+import { useAccount } from "@/lib/account-context";
 import type { TimeLayout, TimeLayoutItem, TimeType } from "@/lib/types";
 import { TIME_TYPE_LABELS } from "@/lib/types";
 import {
@@ -25,6 +26,7 @@ function timeToSpan(hhmm: string): string {
 }
 
 export default function TimeLayoutPage() {
+    const { accountId } = useAccount();
     const [fileList, setFileList] = useState<string[]>([]);
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
     const [layouts, setLayouts] = useState<TimeLayoutsData>({});
@@ -38,9 +40,10 @@ export default function TimeLayoutPage() {
 
     const loadFiles = useCallback(async () => {
         setLoading(true);
-        try { setFileList(await data.list("TimeLayout")); } catch { setFileList([]); }
+        if (!accountId) return;
+        try { setFileList(await data.list(accountId, "TimeLayout")); } catch { setFileList([]); }
         setLoading(false);
-    }, []);
+    }, [accountId]);
 
     useEffect(() => { loadFiles(); }, [loadFiles]);
 
@@ -49,7 +52,7 @@ export default function TimeLayoutPage() {
         setSelectedLayoutId(null);
         setDataLoading(true);
         try {
-            const content = await data.read("TimeLayout", name);
+            const content = await data.read(accountId, "TimeLayout", name);
             setLayouts((content as TimeLayoutsData) || {});
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "加载失败" });
@@ -63,7 +66,7 @@ export default function TimeLayoutPage() {
         setSaving(true);
         setMsg(null);
         try {
-            await data.write("TimeLayout", selectedFile, layouts);
+            await data.write(accountId, "TimeLayout", selectedFile, layouts);
             setMsg({ type: "success", text: "时间表数据已保存" });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "保存失败" });
@@ -75,7 +78,7 @@ export default function TimeLayoutPage() {
         e.preventDefault();
         if (!newFileName.trim()) return;
         try {
-            await data.create("TimeLayout", newFileName.trim());
+            await data.create(accountId, "TimeLayout", newFileName.trim());
             setShowCreate(false); setNewFileName(""); loadFiles();
             setMsg({ type: "success", text: "文件已创建" });
         } catch (err: unknown) {
@@ -86,7 +89,7 @@ export default function TimeLayoutPage() {
     async function handleDeleteFile(name: string) {
         if (!confirm(`确定删除文件 "${name}"？`)) return;
         try {
-            await data.deleteData("TimeLayout", name);
+            await data.deleteData(accountId, "TimeLayout", name);
             if (selectedFile === name) { setSelectedFile(null); setLayouts({}); }
             loadFiles();
         } catch (err: unknown) {
