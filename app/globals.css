@@ -1080,3 +1080,192 @@ body {
 .justify-center {
   justify-content: center;
 }
+
+/* ===== 账户列表页（Cloudflare 风格账户选择器） ===== */
+
+.accounts-list-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0f4ff 0%, var(--bg-primary) 40%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 24px 40px;
+}
+
+.accounts-list-container {
+  width: 100%;
+  max-width: 720px;
+}
+
+.accounts-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.accounts-list-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.accounts-list-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.accounts-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.accounts-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  gap: 12px;
+  text-align: center;
+}
+
+.accounts-list-empty-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.accounts-list-empty-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.accounts-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 账户卡片 */
+.account-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.account-card:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 4px 20px rgba(0, 120, 212, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.account-card:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.1);
+}
+
+.account-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e1efff, #cce0ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+  flex-shrink: 0;
+}
+
+.account-card-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.account-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.account-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.account-card-slug {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: #f5f5f5;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.account-card-id {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: 'Cascadia Code', monospace;
+  opacity: 0.7;
+}
+
+.account-card-arrow {
+  color: var(--text-secondary);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.account-card:hover .account-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* detail row */
+.detail-row {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.detail-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* text-tertiary helper */
+:root {
+  --text-tertiary: #999;
+}

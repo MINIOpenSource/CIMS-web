@@ -27,7 +27,7 @@ const NAV_SECTIONS: NavSection[] = [
     {
         title: "概览",
         items: [
-            { label: "仪表盘", href: "/", icon: <Home24Regular /> },
+            { label: "仪表盘", href: "/dashboard", icon: <Home24Regular /> },
         ],
     },
     {
