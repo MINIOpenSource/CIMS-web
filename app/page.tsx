@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
       setStats({
         clientCount: cl.status === "fulfilled" && Array.isArray(cl.value) ? String(cl.value.length) : "0",
-        pairingCount: pr.status === "fulfilled" ? String(pr.value.codes?.length || 0) : "0",
+        pairingCount: pr.status === "fulfilled" && Array.isArray(pr.value) ? String(pr.value.length) : "0",
         resourceCount: String(totalRes),
       });
     } catch {

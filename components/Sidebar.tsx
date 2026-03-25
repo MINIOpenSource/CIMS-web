@@ -4,12 +4,12 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-    Home24Regular, People24Regular, ShieldKeyhole24Regular,
-    Settings24Regular, PlugConnected24Regular, Link24Regular,
-    DataBarVertical24Regular, Book24Regular, Clock24Regular,
-    Board24Regular, LockClosed24Regular, Apps24Regular,
-    Key24Regular, ShieldTask24Regular, PersonAccounts24Regular,
-    Send24Regular,
+    Home24Regular, PlugConnected24Regular, Link24Regular,
+    Settings24Regular, Book24Regular, Clock24Regular,
+    Board24Regular, ShieldTask24Regular, Apps24Regular,
+    Key24Regular, PersonAccounts24Regular,
+    Send24Regular, PeopleAdd24Regular, Laptop24Regular,
+    DataBarVertical24Regular,
 } from "@fluentui/react-icons";
 
 interface NavItem {
@@ -46,17 +46,22 @@ const NAV_SECTIONS: NavSection[] = [
         title: "客户端",
         items: [
             { label: "客户端管理", href: "/clients", icon: <PlugConnected24Regular /> },
+            { label: "通知推送", href: "/notifications", icon: <Send24Regular /> },
         ],
     },
     {
-        title: "系统管理",
+        title: "接入管理",
         items: [
-            { label: "用户管理", href: "/users", icon: <People24Regular /> },
-            { label: "角色管理", href: "/roles", icon: <ShieldKeyhole24Regular /> },
-            { label: "权限管理", href: "/permissions", icon: <LockClosed24Regular /> },
-            { label: "账户管理", href: "/accounts", icon: <PersonAccounts24Regular /> },
             { label: "配对码管理", href: "/pairing", icon: <Link24Regular /> },
-            { label: "通知推送", href: "/notifications", icon: <Send24Regular /> },
+            { label: "预注册客户端", href: "/pre-registration", icon: <Laptop24Regular /> },
+        ],
+    },
+    {
+        title: "账户",
+        items: [
+            { label: "账户概览", href: "/accounts", icon: <PersonAccounts24Regular /> },
+            { label: "访问控制", href: "/access", icon: <PeopleAdd24Regular /> },
+            { label: "邀请管理", href: "/invitations", icon: <PeopleAdd24Regular /> },
         ],
     },
     {

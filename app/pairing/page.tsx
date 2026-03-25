@@ -3,18 +3,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { pairing } from "@/lib/api";
 import { useAccount } from "@/lib/account-context";
-import type { PairingCodeDetail } from "@/lib/types";
+import type { PairingCodeOut } from "@/lib/types";
 import {
-    Button, Spinner, Switch,
+    Button, Spinner,
     MessageBar, MessageBarBody,
 } from "@fluentui/react-components";
-import { Checkmark24Regular, Delete24Regular } from "@fluentui/react-icons";
+import { Checkmark24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 
 export default function PairingPage() {
     const { accountId } = useAccount();
-    const [codes, setCodes] = useState<PairingCodeDetail[]>([]);
+    const [codes, setCodes] = useState<PairingCodeOut[]>([]);
     const [loading, setLoading] = useState(true);
-    const [pairingEnabled, setPairingEnabled] = useState(true);
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const loadData = useCallback(async () => {
@@ -22,39 +21,29 @@ export default function PairingPage() {
         try {
             if (!accountId) return;
             const res = await pairing.listCodes(accountId);
-            setCodes(res.codes || []);
+            setCodes(res || []);
         } catch { /* ignore */ }
         setLoading(false);
     }, [accountId]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
-    async function handleApprove(code: string) {
+    async function handleApprove(pairingId: string) {
         try {
-            await pairing.approve(accountId, code);
-            setMsg({ type: "success", text: `配对码 ${code} 已审批` });
+            await pairing.approve(accountId, pairingId);
+            setMsg({ type: "success", text: `配对码已批准` });
             loadData();
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "审批失败" });
         }
     }
 
-    async function handleDelete(code: string) {
-        if (!confirm(`确定要删除配对码 "${code}" 吗？`)) return;
+    async function handleReject(pairingId: string) {
+        if (!confirm(`确定要拒绝此配对码吗？`)) return;
         try {
-            await pairing.deleteCode(accountId, code);
-            setMsg({ type: "success", text: "配对码已删除" });
+            await pairing.reject(accountId, pairingId);
+            setMsg({ type: "success", text: "配对码已拒绝" });
             loadData();
-        } catch (err: unknown) {
-            setMsg({ type: "error", text: err instanceof Error ? err.message : "删除失败" });
-        }
-    }
-
-    async function handleToggle(enabled: boolean) {
-        try {
-            await pairing.toggle(accountId, { enabled });
-            setPairingEnabled(enabled);
-            setMsg({ type: "success", text: `配对功能已${enabled ? "启用" : "禁用"}` });
         } catch (err: unknown) {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "操作失败" });
         }
@@ -65,14 +54,7 @@ export default function PairingPage() {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">配对码管理</h1>
-                    <p className="page-subtitle">管理客户端配对码的审批和设置</p>
-                </div>
-                <div className="flex items-center gap-12">
-                    <Switch
-                        checked={pairingEnabled}
-                        onChange={(_, d) => handleToggle(d.checked)}
-                        label={pairingEnabled ? "配对功能已启用" : "配对功能已禁用"}
-                    />
+                    <p className="page-subtitle">管理客户端配对码的审批</p>
                 </div>
             </div>
 
@@ -93,9 +75,6 @@ export default function PairingPage() {
                             <tr>
                                 <th>配对码</th>
                                 <th>客户端 UID</th>
-                                <th>客户端 ID</th>
-                                <th>IP 地址</th>
-                                <th>MAC 地址</th>
                                 <th>状态</th>
                                 <th>创建时间</th>
                                 <th>操作</th>
@@ -103,17 +82,14 @@ export default function PairingPage() {
                         </thead>
                         <tbody>
                             {codes.map(c => (
-                                <tr key={c.code}>
+                                <tr key={c.id}>
                                     <td style={{ fontWeight: 600, fontFamily: "monospace", letterSpacing: 1 }}>{c.code}</td>
                                     <td style={{ fontFamily: "monospace", fontSize: 11 }}>{c.client_uid || "-"}</td>
-                                    <td style={{ fontSize: 11 }}>{c.client_id || "-"}</td>
-                                    <td style={{ fontFamily: "monospace", fontSize: 12 }}>{c.client_ip || "-"}</td>
-                                    <td style={{ fontFamily: "monospace", fontSize: 12 }}>{c.client_mac || "-"}</td>
                                     <td>
                                         {c.used ? (
                                             <span className="badge badge-info">已使用</span>
                                         ) : c.approved ? (
-                                            <span className="badge badge-success">已审批</span>
+                                            <span className="badge badge-success">已批准</span>
                                         ) : (
                                             <span className="badge badge-warning">待审批</span>
                                         )}
@@ -122,14 +98,16 @@ export default function PairingPage() {
                                     <td>
                                         <div className="flex gap-4">
                                             {!c.approved && !c.used && (
-                                                <Button appearance="primary" size="small" icon={<Checkmark24Regular />} onClick={() => handleApprove(c.code)}>
-                                                    审批
+                                                <Button appearance="primary" size="small" icon={<Checkmark24Regular />} onClick={() => handleApprove(c.id)}>
+                                                    批准
                                                 </Button>
                                             )}
-                                            <Button appearance="subtle" size="small" icon={<Delete24Regular />} onClick={() => handleDelete(c.code)}
-                                                style={{ color: "var(--danger-color)" }}>
-                                                删除
-                                            </Button>
+                                            {!c.used && (
+                                                <Button appearance="subtle" size="small" icon={<Dismiss24Regular />} onClick={() => handleReject(c.id)}
+                                                    style={{ color: "var(--danger-color)" }}>
+                                                    拒绝
+                                                </Button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

@@ -6,6 +6,7 @@
  * - 登录后探测 Admin API 判断是否超管。
  * - 监听 cims:auth-expired 事件触发内联登录卡片。
  * - 重新登录后自动关闭卡片，页面无需再次跳转。
+ * - 注册后进入 Pending 状态，不会自动登录。
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
@@ -27,9 +28,11 @@ interface AuthState {
     loading: boolean;
     /** 错误消息 */
     error: string | null;
+    /** 注册成功消息 */
+    registerSuccess: string | null;
     /** 登录 */
     login: (data: UserLoginRequest) => Promise<void>;
-    /** 注册 */
+    /** 注册（Pending 状态） */
     register: (data: UserRegisterRequest) => Promise<void>;
     /** 登出 */
     logout: () => Promise<void>;
@@ -54,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [requireReAuth, setRequireReAuth] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
 
     // 初始化：从 localStorage 读取 token
     useEffect(() => {
@@ -93,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = useCallback(async (data: UserLoginRequest) => {
         setLoading(true);
         setError(null);
+        setRegisterSuccess(null);
         try {
             const result: LoginResult = await authApi.login(data);
             if ("requires_2fa" in result && result.requires_2fa) {
@@ -113,10 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const register = useCallback(async (data: UserRegisterRequest) => {
         setLoading(true);
         setError(null);
+        setRegisterSuccess(null);
         try {
             const result = await authApi.register(data);
-            setToken(result.token);
-            setTokenState(result.token);
+            // 注册后进入 Pending 状态，不直接登录
+            setRegisterSuccess(result.message || "注册成功，等待管理员审核");
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : "注册失败";
             setError(msg);
@@ -146,7 +152,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPending2FA(null);
     }, []);
 
-    const clearErrorCb = useCallback(() => setError(null), []);
+    const clearErrorCb = useCallback(() => {
+        setError(null);
+        setRegisterSuccess(null);
+    }, []);
 
     // 内联重新认证
     const handleReAuth = useCallback(async (data: UserLoginRequest) => {
@@ -185,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             requireReAuth,
             loading,
             error,
+            registerSuccess,
             login,
             register,
             logout,

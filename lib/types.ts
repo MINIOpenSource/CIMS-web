@@ -6,9 +6,9 @@
 // ============================================================
 
 export interface UserRegisterRequest {
-    username: string;
     email: string;
     password: string;
+    username?: string;
     display_name?: string;
 }
 
@@ -34,7 +34,7 @@ export interface StatusResponse {
 }
 
 // ============================================================
-// 用户、角色、账户
+// 用户、账户
 // ============================================================
 
 export interface UserOut {
@@ -44,6 +44,7 @@ export interface UserOut {
     display_name: string;
     role_code: string;
     is_active: boolean;
+    can_create_account?: boolean;
     created_at: string;
 }
 
@@ -51,20 +52,20 @@ export interface UserUpdateRequest {
     display_name?: string | null;
     role_code?: string | null;
     is_active?: boolean | null;
+    can_create_account?: boolean | null;
 }
 
-export interface RoleOut {
-    id: string;
-    code: string;
-    label: string;
-    priority: number;
-    is_system: boolean;
+export interface EmailUpdate {
+    email: string;
 }
 
-export interface RoleCreateRequest {
-    code: string;
-    label: string;
-    priority: number;
+export interface UsernameUpdate {
+    username: string;
+}
+
+export interface PasswordChange {
+    old_password: string;
+    new_password: string;
 }
 
 export interface AccountOut {
@@ -76,42 +77,13 @@ export interface AccountOut {
     created_at: string;
 }
 
-// ============================================================
-// 限额
-// ============================================================
-
-export interface QuotaOut {
-    id: string;
-    account_id: string;
-    quota_key: string;
-    max_value: number;
-    current_value: number;
+export interface AccountCreate {
+    name: string;
+    slug?: string;
 }
 
-export interface QuotaSetRequest {
-    quota_key: string;
-    max_value: number;
-}
-
-// ============================================================
-// 权限
-// ============================================================
-
-export interface PermissionDefOut {
-    code: string;
-    label: string;
-    category: string;
-}
-
-export interface PermissionGrantRequest {
-    member_id: string;
-    permission_code: string;
-    granted?: boolean;
-}
-
-export interface PermissionRevokeRequest {
-    member_id: string;
-    permission_code: string;
+export interface SlugUpdate {
+    slug: string;
 }
 
 // ============================================================
@@ -146,23 +118,35 @@ export interface TotpRecoverRequest {
 // 配对码
 // ============================================================
 
-export interface PairingCodeDetail {
+export interface PairingCodeOut {
+    id: string;
     code: string;
     client_uid?: string;
-    client_id?: string;
-    client_mac?: string;
-    client_ip?: string;
-    created_at?: string;
     approved?: boolean;
     used?: boolean;
+    created_at?: string;
 }
 
-export interface PairingListResponse {
-    codes: PairingCodeDetail[];
+// ============================================================
+// 预注册客户端
+// ============================================================
+
+export interface PreRegOut {
+    id: string;
+    account_id: string;
+    label: string;
+    class_identity: string;
+    created_at: string;
 }
 
-export interface PairingToggle {
-    enabled: boolean;
+// ============================================================
+// 访问控制
+// ============================================================
+
+export interface AccessMember {
+    user_id: string;
+    account_id: string;
+    role_code: string;
 }
 
 // ============================================================
