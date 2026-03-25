@@ -343,6 +343,96 @@ export interface ManagementPolicy {
     DisableEasterEggs?: boolean;
 }
 
+/** 管理服务器类型: 0=无服务器, 1=集控服务器 */
+export type ManagementServerKind = 0 | 1;
+
+export const MANAGEMENT_SERVER_KIND_LABELS: Record<ManagementServerKind, string> = {
+    0: "无服务器 (Serverless)",
+    1: "集控服务器 (ManagementServer)",
+};
+
+/** 默认设置 (ManagementSettings) */
+export interface ManagementSettings {
+    IsManagementEnabled?: boolean;
+    ManagementServerKind?: ManagementServerKind;
+    ManagementServer?: string;
+    ManagementServerGrpc?: string;
+    ManifestUrlTemplate?: string;
+    ClassIdentity?: string;
+}
+
+/** 授权等级: 0=无, 1=用户认证, 2=管理员认证 */
+export type AuthorizeLevel = 0 | 1 | 2;
+
+export const AUTHORIZE_LEVEL_LABELS: Record<AuthorizeLevel, string> = {
+    0: "无需认证",
+    1: "用户认证",
+    2: "管理员认证",
+};
+
+/** 凭据配置 (ManagementCredentialConfig) */
+export interface ManagementCredentialConfig {
+    UserCredential?: string;
+    AdminCredential?: string;
+    EditAuthorizeSettingsAuthorizeLevel?: AuthorizeLevel;
+    EditPolicyAuthorizeLevel?: AuthorizeLevel;
+    ExitManagementAuthorizeLevel?: AuthorizeLevel;
+    EditProfileAuthorizeLevel?: AuthorizeLevel;
+    EditSettingsAuthorizeLevel?: AuthorizeLevel;
+    ExitApplicationAuthorizeLevel?: AuthorizeLevel;
+    ChangeLessonsAuthorizeLevel?: AuthorizeLevel;
+}
+
+/** 水平对齐方式: 0=Stretch, 1=Left, 2=Center, 3=Right */
+export type HorizontalAlignmentType = 0 | 1 | 2 | 3;
+
+export const HORIZONTAL_ALIGNMENT_LABELS: Record<HorizontalAlignmentType, string> = {
+    0: "拉伸 (Stretch)",
+    1: "左对齐 (Left)",
+    2: "居中 (Center)",
+    3: "右对齐 (Right)",
+};
+
+/** 组件设置项 (ComponentSettings) */
+export interface ComponentSettingsItem {
+    Id?: string;
+    NameCache?: string;
+    Settings?: unknown;
+    HideOnRule?: boolean;
+    HidingRules?: unknown;
+    /* 字体大小 */
+    IsResourceOverridingEnabled?: boolean;
+    MainWindowSecondaryFontSize?: number;
+    MainWindowBodyFontSize?: number;
+    MainWindowEmphasizedFontSize?: number;
+    MainWindowLargeFontSize?: number;
+    /* 颜色 */
+    IsCustomForegroundColorEnabled?: boolean;
+    ForegroundColor?: string;
+    IsCustomBackgroundColorEnabled?: boolean;
+    BackgroundColor?: string;
+    IsCustomBackgroundOpacityEnabled?: boolean;
+    BackgroundOpacity?: number;
+    IsCustomCornerRadiusEnabled?: boolean;
+    CustomCornerRadius?: number;
+    Opacity?: number;
+    /* 布局 */
+    RelativeLineNumber?: number;
+    HorizontalAlignment?: HorizontalAlignmentType;
+    IsMinWidthEnabled?: boolean;
+    MinWidth?: number;
+    IsMaxWidthEnabled?: boolean;
+    MaxWidth?: number;
+    IsFixedWidthEnabled?: boolean;
+    FixedWidth?: number;
+    IsCustomMarginEnabled?: boolean;
+    MarginLeft?: number;
+    MarginTop?: number;
+    MarginRight?: number;
+    MarginBottom?: number;
+    LastWidthCache?: number;
+}
+
 // ============================================================
 // 客户端
 // ============================================================
