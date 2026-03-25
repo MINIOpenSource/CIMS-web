@@ -8,10 +8,11 @@ import type {
     EmailUpdate, UsernameUpdate, PasswordChange,
     TotpEnableResponse, TotpConfirmRequest, TotpDisableRequest,
     TotpVerifyRequest, TotpRecoverRequest,
-    PairingCodeOut, PreRegOut, AccessMember,
+    PairingCodeOut, PreRegOut, PreRegCreate, AccessMember, AccessRoleUpdate,
+    InvitationOut, InvitationCreate,
     NotificationPayload, BatchRequest,
     StatusResponse, MessageResponse, LoginResult,
-    ResourceType,
+    ResourceType, SettingsUpdate,
 } from "./types";
 
 // ============================================================
@@ -284,6 +285,10 @@ export const preRegistration = {
     get: (accountId: string, preRegId: string) =>
         get<PreRegOut>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}`),
 
+    /** 创建预注册客户端 */
+    create: (accountId: string, data: PreRegCreate) =>
+        post<PreRegOut>(`${acctPath(accountId)}/pre-registration/create`, data),
+
     /** 删除预注册客户端 */
     delete: (accountId: string, preRegId: string) =>
         post<void>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/delete`),
@@ -301,6 +306,18 @@ export const access = {
     /** 列出具权用户 */
     list: (accountId: string) =>
         post<AccessMember[]>(`${acctPath(accountId)}/access/list`),
+
+    /** 按 user_id 搜索成员 */
+    search: (accountId: string, q: string) =>
+        post<AccessMember[]>(`${acctPath(accountId)}/access/search?q=${encodeURIComponent(q)}`),
+
+    /** 修改成员角色 */
+    update: (accountId: string, memberId: string, data: AccessRoleUpdate) =>
+        post<AccessMember>(`${acctPath(accountId)}/access/${encodeURIComponent(memberId)}/update`, data),
+
+    /** 移除成员 */
+    delete: (accountId: string, memberId: string) =>
+        post<void>(`${acctPath(accountId)}/access/${encodeURIComponent(memberId)}/delete`),
 };
 
 // ============================================================
@@ -310,11 +327,15 @@ export const access = {
 export const invitations = {
     /** 列出邀请 */
     list: (accountId: string) =>
-        post<unknown[]>(`${acctPath(accountId)}/invitation/list`),
+        post<InvitationOut[]>(`${acctPath(accountId)}/invitation/list`),
 
     /** 创建邀请 */
-    create: (accountId: string) =>
-        post<unknown>(`${acctPath(accountId)}/invitation/create`),
+    create: (accountId: string, data?: InvitationCreate) =>
+        post<InvitationOut>(`${acctPath(accountId)}/invitation/create`, data || {}),
+
+    /** 撤销邀请 */
+    revoke: (accountId: string, invitationId: string) =>
+        post<MessageResponse>(`${acctPath(accountId)}/invitation/${encodeURIComponent(invitationId)}/revoke`),
 };
 
 // ============================================================

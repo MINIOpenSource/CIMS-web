@@ -8,16 +8,20 @@ import {
     Button, Input, Spinner,
     MessageBar, MessageBarBody,
 } from "@fluentui/react-components";
-import { Edit24Regular } from "@fluentui/react-icons";
+import { Edit24Regular, Delete24Regular } from "@fluentui/react-icons";
+import { useRouter } from "next/navigation";
 
 export default function AccountsPage() {
     const { accountId, currentAccount, refreshAccounts } = useAccount();
+    const router = useRouter();
     const [accountInfo, setAccountInfo] = useState<AccountOut | null>(null);
     const [loading, setLoading] = useState(true);
     const [editingSlug, setEditingSlug] = useState(false);
     const [newSlug, setNewSlug] = useState("");
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState("");
+    const [deleting, setDeleting] = useState(false);
 
     const loadData = useCallback(async () => {
         if (!accountId) return;
@@ -49,6 +53,20 @@ export default function AccountsPage() {
             setMsg({ type: "error", text: err instanceof Error ? err.message : "更新失败" });
         }
         setSaving(false);
+    }
+
+    async function handleDeleteAccount() {
+        if (!accountInfo || deleteConfirm !== accountInfo.name) return;
+        setDeleting(true);
+        try {
+            await accounts.delete(accountId);
+            setMsg({ type: "success", text: "账户已停用" });
+            refreshAccounts();
+            router.push("/");
+        } catch (err: unknown) {
+            setMsg({ type: "error", text: err instanceof Error ? err.message : "删除失败" });
+            setDeleting(false);
+        }
     }
 
     return (
@@ -133,6 +151,41 @@ export default function AccountsPage() {
                     </div>
                 )}
             </div>
+
+            {/* 危险操作区域 */}
+            {accountInfo && (
+                <div className="card mt-16" style={{
+                    borderColor: "var(--danger-color)",
+                    borderWidth: 1,
+                    borderStyle: "solid",
+                }}>
+                    <div className="card-title" style={{ color: "var(--danger-color)" }}>
+                        危险操作
+                    </div>
+                    <p style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 16 }}>
+                        停用账户后，所有成员和预注册客户端将被清理，此操作不可撤销。
+                        仅账户所有者可执行此操作。
+                    </p>
+                    <div style={{ display: "grid", gap: 12, maxWidth: 400 }}>
+                        <label style={{ fontSize: 13, fontWeight: 500 }}>
+                            请输入账户名称「{accountInfo.name}」以确认:
+                        </label>
+                        <Input
+                            value={deleteConfirm}
+                            onChange={(_, d) => setDeleteConfirm(d.value)}
+                            placeholder={accountInfo.name}
+                        />
+                        <Button appearance="primary" icon={<Delete24Regular />}
+                            onClick={handleDeleteAccount}
+                            disabled={deleting || deleteConfirm !== accountInfo.name}
+                            style={{
+                                backgroundColor: deleteConfirm === accountInfo.name ? "var(--danger-color)" : undefined,
+                            }}>
+                            {deleting ? <Spinner size="tiny" /> : "停用账户"}
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

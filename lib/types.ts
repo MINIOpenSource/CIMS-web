@@ -144,9 +144,72 @@ export interface PreRegOut {
 // ============================================================
 
 export interface AccessMember {
+    id: string;
     user_id: string;
     account_id: string;
-    role_code: string;
+    role_in_account: string;
+    joined_at: string;
+}
+
+export interface AccessRoleUpdate {
+    role_in_account: string;
+}
+
+/** 账户内角色 */
+export const ACCOUNT_ROLE_LABELS: Record<string, string> = {
+    owner: "所有者",
+    admin: "管理员",
+    member: "成员",
+    viewer: "观察者",
+};
+
+// ============================================================
+// 邀请管理
+// ============================================================
+
+export interface InvitationOut {
+    id: string;
+    account_id: string;
+    inviter_user_id: string;
+    code: string;
+    role_in_account: string;
+    max_uses: number;
+    used_count: number;
+    expires_at: string | null;
+    is_active: boolean;
+    created_at: string;
+}
+
+export interface InvitationCreate {
+    role_in_account?: string;
+    max_uses?: number;
+    expires_at?: string | null;
+}
+
+// ============================================================
+// 预注册创建
+// ============================================================
+
+export interface PreRegCreate {
+    label: string;
+    class_identity: string;
+}
+
+// ============================================================
+// 系统设置
+// ============================================================
+
+/** Admin 设置白名单键 */
+export const SETTINGS_ALLOWED_KEYS = [
+    "registration_open",
+    "require_approval",
+    "max_accounts_per_user",
+    "default_role",
+    "motd",
+] as const;
+
+export interface SettingsUpdate {
+    items: Record<string, string>;
 }
 
 // ============================================================

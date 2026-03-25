@@ -3,18 +3,22 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { preRegistration } from "@/lib/api";
 import { useAccount } from "@/lib/account-context";
-import type { PreRegOut } from "@/lib/types";
+import type { PreRegOut, PreRegCreate } from "@/lib/types";
 import {
-    Button, Spinner,
+    Button, Input, Spinner,
     MessageBar, MessageBarBody,
+    Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions,
 } from "@fluentui/react-components";
-import { Delete24Regular, ArrowDownload24Regular } from "@fluentui/react-icons";
+import { Add24Regular, Delete24Regular, ArrowDownload24Regular } from "@fluentui/react-icons";
 
 export default function PreRegistrationPage() {
     const { accountId } = useAccount();
     const [list, setList] = useState<PreRegOut[]>([]);
     const [loading, setLoading] = useState(true);
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [creating, setCreating] = useState(false);
+    const [form, setForm] = useState<PreRegCreate>({ label: "", class_identity: "" });
 
     const loadData = useCallback(async () => {
         if (!accountId) return;
@@ -26,6 +30,24 @@ export default function PreRegistrationPage() {
     }, [accountId]);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    async function handleCreate() {
+        if (!form.label.trim() || !form.class_identity.trim()) return;
+        setCreating(true);
+        try {
+            await preRegistration.create(accountId, {
+                label: form.label.trim(),
+                class_identity: form.class_identity.trim(),
+            });
+            setMsg({ type: "success", text: "预注册客户端已创建" });
+            setDialogOpen(false);
+            setForm({ label: "", class_identity: "" });
+            loadData();
+        } catch (err: unknown) {
+            setMsg({ type: "error", text: err instanceof Error ? err.message : "创建失败" });
+        }
+        setCreating(false);
+    }
 
     async function handleDelete(preRegId: string) {
         if (!confirm("确定要删除此预注册客户端吗？")) return;
@@ -60,6 +82,10 @@ export default function PreRegistrationPage() {
                     <h1 className="page-title">预注册客户端</h1>
                     <p className="page-subtitle">管理预注册的 ClassIsland 客户端</p>
                 </div>
+                <Button appearance="primary" icon={<Add24Regular />}
+                    onClick={() => setDialogOpen(true)}>
+                    新增预注册
+                </Button>
             </div>
 
             {msg && (
@@ -72,7 +98,12 @@ export default function PreRegistrationPage() {
                 {loading ? (
                     <div className="empty-state"><Spinner size="medium" /></div>
                 ) : list.length === 0 ? (
-                    <div className="empty-state"><div className="empty-state-text">暂无预注册客户端</div></div>
+                    <div className="empty-state">
+                        <div className="empty-state-text">暂无预注册客户端</div>
+                        <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 8 }}>
+                            点击「新增预注册」添加客户端
+                        </p>
+                    </div>
                 ) : (
                     <table className="data-table">
                         <thead>
@@ -108,6 +139,44 @@ export default function PreRegistrationPage() {
                     </table>
                 )}
             </div>
+
+            {/* 创建预注册对话框 */}
+            <Dialog open={dialogOpen} onOpenChange={(_, d) => setDialogOpen(d.open)}>
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>新增预注册客户端</DialogTitle>
+                        <DialogContent>
+                            <div style={{ display: "grid", gap: 16, paddingTop: 8 }}>
+                                <div>
+                                    <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 4 }}>
+                                        标签名称
+                                    </label>
+                                    <Input placeholder="例如：1号教室"
+                                        value={form.label}
+                                        onChange={(_, d) => setForm(f => ({ ...f, label: d.value }))}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 4 }}>
+                                        班级标识 (class_identity)
+                                    </label>
+                                    <Input placeholder="例如：class-101"
+                                        value={form.class_identity}
+                                        onChange={(_, d) => setForm(f => ({ ...f, class_identity: d.value }))}
+                                    />
+                                </div>
+                            </div>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button appearance="secondary" onClick={() => setDialogOpen(false)}>取消</Button>
+                            <Button appearance="primary" onClick={handleCreate}
+                                disabled={creating || !form.label.trim() || !form.class_identity.trim()}>
+                                {creating ? <Spinner size="tiny" /> : "创建"}
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
         </div>
     );
 }
