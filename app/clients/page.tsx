@@ -18,7 +18,7 @@ import {
 export default function ClientsPage() {
     const { accountId } = useAccount();
     const [clientList, setClientList] = useState<string[]>([]);
-    const [statusMap, setStatusMap] = useState<Record<string, unknown>>({});
+
     const [loading, setLoading] = useState(true);
     const [selectedUid, setSelectedUid] = useState<string | null>(null);
     const [clientDetail, setClientDetail] = useState<ClientInfo | null>(null);
@@ -36,11 +36,8 @@ export default function ClientsPage() {
         setLoading(true);
         try {
             if (!accountId) return;
-            const [cl, st] = await Promise.allSettled([clients.list(accountId), clients.status(accountId)]);
-            setClientList(cl.status === "fulfilled" ? (cl.value as string[]) : []);
-            if (st.status === "fulfilled" && st.value && typeof st.value === "object") {
-                setStatusMap(st.value as Record<string, unknown>);
-            }
+            const cl = await clients.list(accountId);
+            setClientList(Array.isArray(cl) ? cl : []);
         } catch { /* ignore */ }
         setLoading(false);
     }, [accountId]);
@@ -90,10 +87,8 @@ export default function ClientsPage() {
         }
     }
 
-    const isOnline = (uid: string) => {
-        if (statusMap && typeof statusMap === "object") {
-            return uid in statusMap;
-        }
+    const isOnline = (_uid: string) => {
+        // 状态现为 per-client 查询，列表页不再批量获取
         return false;
     };
 

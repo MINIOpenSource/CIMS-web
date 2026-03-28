@@ -49,7 +49,7 @@ export default function InvitationsPage() {
     async function handleRevoke(id: string) {
         if (!confirm("确定要撤销此邀请码吗？撤销后无法恢复。")) return;
         try {
-            await invitations.revoke(accountId, id);
+            await invitations.delete(accountId, id);
             setMsg({ type: "success", text: "邀请已撤销" });
             loadData();
         } catch (err: unknown) {

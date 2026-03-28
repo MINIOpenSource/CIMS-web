@@ -85,7 +85,7 @@ export default function JsonResourceEditor({
     async function handleCreateFile(e: React.FormEvent) {
         e.preventDefault();
         try {
-            await data.create(accountId, resourceType, newFileName.trim());
+            await data.create(accountId, resourceType, { name: newFileName.trim() });
             setShowCreate(false); setNewFileName(""); loadFiles();
             setMsg({ type: "success", text: "文件已创建" });
         } catch (err: unknown) {

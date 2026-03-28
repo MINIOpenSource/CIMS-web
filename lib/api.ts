@@ -1,6 +1,6 @@
 /* ===== API 客户端层 ===== */
 /* 统一封装所有后端接口调用，Bearer Token 自动注入 */
-/* 三端点架构：Management API / Admin API / Client API */
+/* 双端点架构：Management API / Admin API */
 
 import type {
     UserRegisterRequest, UserLoginRequest, TokenResponse,
@@ -17,7 +17,7 @@ import type {
 
 // ============================================================
 // 服务器地址（从环境变量读取）
-// Management API (27042) / Admin API (27043) / Client API (27041)
+// Management API (27042) / Admin API (27043)
 // ============================================================
 
 const STORAGE_KEY_TOKEN = "cims_auth_token";
@@ -31,12 +31,6 @@ export function getServerUrl(): string {
 /** Admin API 地址（超管端点） */
 export function getAdminUrl(): string {
     const url = process.env.NEXT_PUBLIC_CIMS_ADMIN_ENDPOINT || "";
-    return url.replace(/\/+$/, "");
-}
-
-/** Client API 地址（/get?token= 资源获取端点） */
-export function getClientUrl(): string {
-    const url = process.env.NEXT_PUBLIC_CIMS_CLIENT_ENDPOINT || "";
     return url.replace(/\/+$/, "");
 }
 
@@ -145,7 +139,7 @@ function del<T>(path: string, base?: string): Promise<T> {
 
 /** 编码账户内路径前缀 */
 function acctPath(accountId: string): string {
-    return `/accounts/${encodeURIComponent(accountId)}`;
+    return `/account/${encodeURIComponent(accountId)}`;
 }
 
 // ============================================================
@@ -209,19 +203,19 @@ export const userInfo = {
 
 export const twoFA = {
     enable: () =>
-        post<TotpEnableResponse>("/user/2fa/totp/auth/2fa/enable"),
+        post<TotpEnableResponse>("/user/2fa/totp/enable"),
 
     confirm: (data: TotpConfirmRequest) =>
-        post<unknown>("/user/2fa/totp/auth/2fa/confirm", data),
+        post<unknown>("/user/2fa/totp/confirm", data),
 
     disable: (data: TotpDisableRequest) =>
-        post<unknown>("/user/2fa/totp/auth/2fa/disable", data),
+        post<unknown>("/user/2fa/totp/disable", data),
 
     verify: (data: TotpVerifyRequest) =>
-        post<TokenResponse>("/user/2fa/totp/auth/2fa/verify", data),
+        post<TokenResponse>("/user/2fa/totp/verify", data),
 
     recover: (data: TotpRecoverRequest) =>
-        post<TokenResponse>("/user/2fa/totp/auth/2fa/recover", data),
+        post<TokenResponse>("/user/2fa/totp/recover", data),
 };
 
 // ============================================================
@@ -231,7 +225,7 @@ export const twoFA = {
 export const accounts = {
     /** 列出当前用户有权访问的所有账户 */
     list: () =>
-        post<AccountOut[]>("/account/list"),
+        get<AccountOut[]>("/account/list"),
 
     /** 搜索账户 */
     search: (q: string) =>
@@ -241,9 +235,9 @@ export const accounts = {
     apply: (data: AccountCreate) =>
         post<AccountOut>("/account/apply", data),
 
-    /** 删除账户 */
+    /** 删除/停用账户 */
     delete: (accountId: string) =>
-        post<unknown>(`/account/${encodeURIComponent(accountId)}/delete`),
+        del<unknown>(`/account/${encodeURIComponent(accountId)}`),
 
     /** 获取账户信息 */
     info: (accountId: string) =>
@@ -255,31 +249,47 @@ export const accounts = {
 };
 
 // ============================================================
-// Pairing (Management API: /accounts/{accountId}/pairing/*)
+// Pairing (Management API: /account/{accountId}/pairing/*)
 // ============================================================
 
 export const pairing = {
     /** 列出配对码 */
     listCodes: (accountId: string) =>
-        post<PairingCodeOut[]>(`${acctPath(accountId)}/pairing/list`),
+        get<PairingCodeOut[]>(`${acctPath(accountId)}/pairing/list`),
+
+    /** 搜索配对码 */
+    search: (accountId: string, q?: string) =>
+        get<PairingCodeOut[]>(`${acctPath(accountId)}/pairing/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
 
     /** 批准配对码 */
     approve: (accountId: string, pairingId: string) =>
         post<unknown>(`${acctPath(accountId)}/pairing/${encodeURIComponent(pairingId)}/approve`),
 
-    /** 拒绝（删除）配对码 */
+    /** 拒绝配对码 */
     reject: (accountId: string, pairingId: string) =>
         post<unknown>(`${acctPath(accountId)}/pairing/${encodeURIComponent(pairingId)}/reject`),
+
+    /** 启用配对功能 */
+    enable: (accountId: string) =>
+        post<unknown>(`${acctPath(accountId)}/pairing/enable`),
+
+    /** 禁用配对功能 */
+    disable: (accountId: string) =>
+        post<unknown>(`${acctPath(accountId)}/pairing/disable`),
 };
 
 // ============================================================
-// Pre-Registration (Management API: /accounts/{accountId}/pre-registration/*)
+// Pre-Registration (Management API: /account/{accountId}/pre-registration/*)
 // ============================================================
 
 export const preRegistration = {
     /** 列出预注册客户端 */
     list: (accountId: string) =>
-        post<PreRegOut[]>(`${acctPath(accountId)}/pre-registration/list`),
+        get<PreRegOut[]>(`${acctPath(accountId)}/pre-registration/list`),
+
+    /** 搜索预注册客户端 */
+    search: (accountId: string, q?: string) =>
+        get<PreRegOut[]>(`${acctPath(accountId)}/pre-registration/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
 
     /** 获取预注册客户端详情 */
     get: (accountId: string, preRegId: string) =>
@@ -291,7 +301,23 @@ export const preRegistration = {
 
     /** 删除预注册客户端 */
     delete: (accountId: string, preRegId: string) =>
-        post<void>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/delete`),
+        del<void>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}`),
+
+    /** 重命名预注册客户端 */
+    rename: (accountId: string, preRegId: string, body: { label: string }) =>
+        post<unknown>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/rename`, body),
+
+    /** 启用预注册客户端 */
+    enable: (accountId: string, preRegId: string) =>
+        post<unknown>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/enable`),
+
+    /** 禁用预注册客户端 */
+    disable: (accountId: string, preRegId: string) =>
+        post<unknown>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/disable`),
+
+    /** 修改预注册客户端档案组 */
+    config: (accountId: string, preRegId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/pre-registration/${encodeURIComponent(preRegId)}/config`, body),
 
     /** 下载引导配置 */
     downloadPreset: (accountId: string, preRegId: string) =>
@@ -299,115 +325,167 @@ export const preRegistration = {
 };
 
 // ============================================================
-// Access Control (Management API: /accounts/{accountId}/access/*)
+// Access Control (Management API: /account/{accountId}/access/*)
 // ============================================================
 
 export const access = {
     /** 列出具权用户 */
     list: (accountId: string) =>
-        post<AccessMember[]>(`${acctPath(accountId)}/access/list`),
+        get<AccessMember[]>(`${acctPath(accountId)}/access/list`),
 
-    /** 按 user_id 搜索成员 */
-    search: (accountId: string, q: string) =>
-        post<AccessMember[]>(`${acctPath(accountId)}/access/search?q=${encodeURIComponent(q)}`),
+    /** 搜索具权用户 */
+    search: (accountId: string, q?: string) =>
+        get<AccessMember[]>(`${acctPath(accountId)}/access/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+    /** 获取具权用户信息 */
+    get: (accountId: string, userId: string) =>
+        get<AccessMember>(`${acctPath(accountId)}/access/${encodeURIComponent(userId)}`),
 
     /** 修改成员角色 */
-    update: (accountId: string, memberId: string, data: AccessRoleUpdate) =>
-        post<AccessMember>(`${acctPath(accountId)}/access/${encodeURIComponent(memberId)}/update`, data),
+    update: (accountId: string, userId: string, data: AccessRoleUpdate) =>
+        post<AccessMember>(`${acctPath(accountId)}/access/${encodeURIComponent(userId)}`, data),
+
+    /** 重命名具权用户 */
+    rename: (accountId: string, userId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/access/${encodeURIComponent(userId)}/rename`, body),
 
     /** 移除成员 */
-    delete: (accountId: string, memberId: string) =>
-        post<void>(`${acctPath(accountId)}/access/${encodeURIComponent(memberId)}/delete`),
+    delete: (accountId: string, userId: string) =>
+        del<void>(`${acctPath(accountId)}/access/${encodeURIComponent(userId)}`),
 };
 
 // ============================================================
-// Invitations (Management API: /accounts/{accountId}/invitation/*)
+// Invitations (Management API: /account/{accountId}/invitation/*)
 // ============================================================
 
 export const invitations = {
     /** 列出邀请 */
     list: (accountId: string) =>
-        post<InvitationOut[]>(`${acctPath(accountId)}/invitation/list`),
+        get<InvitationOut[]>(`${acctPath(accountId)}/invitation/list`),
+
+    /** 搜索邀请 */
+    search: (accountId: string, q?: string) =>
+        get<InvitationOut[]>(`${acctPath(accountId)}/invitation/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+    /** 获取邀请详情 */
+    get: (accountId: string, invitationId: string) =>
+        get<InvitationOut>(`${acctPath(accountId)}/invitation/${encodeURIComponent(invitationId)}`),
 
     /** 创建邀请 */
     create: (accountId: string, data?: InvitationCreate) =>
         post<InvitationOut>(`${acctPath(accountId)}/invitation/create`, data || {}),
 
-    /** 撤销邀请 */
-    revoke: (accountId: string, invitationId: string) =>
-        post<MessageResponse>(`${acctPath(accountId)}/invitation/${encodeURIComponent(invitationId)}/revoke`),
+    /** 重命名邀请 */
+    rename: (accountId: string, invitationId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/invitation/${encodeURIComponent(invitationId)}/rename`, body),
+
+    /** 删除邀请 */
+    delete: (accountId: string, invitationId: string) =>
+        del<void>(`${acctPath(accountId)}/invitation/${encodeURIComponent(invitationId)}`),
 };
 
 // ============================================================
-// Data（资源 CRUD, Management API: /accounts/{accountId}/command/datas/*)
+// Data（资源 CRUD, Management API: /account/{accountId}/{resource_type}/...)
 // ============================================================
 
 export const data = {
-    create: (accountId: string, type: ResourceType, name: string) =>
-        get<StatusResponse>(`${acctPath(accountId)}/command/datas/${type}/create?name=${encodeURIComponent(name)}`),
+    /** 创建资源 */
+    create: (accountId: string, type: ResourceType, body?: unknown) =>
+        post<StatusResponse>(`${acctPath(accountId)}/${type}/create`, body),
 
+    /** 列出资源 */
     list: (accountId: string, type: ResourceType) =>
-        get<string[]>(`${acctPath(accountId)}/command/datas/${type}/list`),
+        get<string[]>(`${acctPath(accountId)}/${type}/list`),
 
-    deleteData: (accountId: string, type: ResourceType, name: string) =>
-        get<StatusResponse>(`${acctPath(accountId)}/command/datas/${type}/delete?name=${encodeURIComponent(name)}`),
+    /** 搜索资源 */
+    search: (accountId: string, type: ResourceType, q?: string) =>
+        post<unknown>(`${acctPath(accountId)}/${type}/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
 
-    getToken: (accountId: string, type: ResourceType, name: string) =>
-        get<{ token: string }>(`${acctPath(accountId)}/command/datas/${type}/token?name=${encodeURIComponent(name)}`),
+    /** 上传资源 */
+    upload: (accountId: string, type: ResourceType, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/${type}/upload`, body),
 
-    write: (accountId: string, type: ResourceType, name: string, payload: unknown, version?: number) => {
-        let url = `${acctPath(accountId)}/command/datas/${type}/write?name=${encodeURIComponent(name)}`;
-        if (version !== undefined) url += `&version=${version}`;
-        return put<StatusResponse>(url, payload);
-    },
+    /** 删除资源 */
+    deleteData: (accountId: string, type: ResourceType, resourceId: string) =>
+        del<StatusResponse>(`${acctPath(accountId)}/${type}/${encodeURIComponent(resourceId)}`),
 
-    update: (accountId: string, type: ResourceType, name: string, payload: unknown, version?: number) => {
-        let url = `${acctPath(accountId)}/command/datas/${type}/update?name=${encodeURIComponent(name)}`;
-        if (version !== undefined) url += `&version=${version}`;
-        return patch<StatusResponse>(url, payload);
-    },
+    /** 重命名资源 */
+    rename: (accountId: string, type: ResourceType, resourceId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/${type}/${encodeURIComponent(resourceId)}/rename`, body),
 
+    /** 覆盖写入资源 */
+    write: (accountId: string, type: ResourceType, resourceId: string, payload: unknown) =>
+        post<StatusResponse>(`${acctPath(accountId)}/${type}/${encodeURIComponent(resourceId)}`, payload),
+
+    /** 读取资源（直接 GET） */
+    read: (accountId: string, type: ResourceType, resourceId: string) =>
+        get<unknown>(`${acctPath(accountId)}/${type}/${encodeURIComponent(resourceId)}`),
+
+    /** 批量操作 */
     batch: (accountId: string, ops: BatchRequest) =>
-        post<unknown>(`${acctPath(accountId)}/command/datas/batch`, ops),
-
-    /** 获取资源内容：先获取 token，再请求 Client API /get?token=xxx */
-    async read(accountId: string, type: ResourceType, name: string): Promise<unknown> {
-        const { token } = await this.getToken(accountId, type, name);
-        const clientBase = getClientUrl();
-        if (!clientBase) throw new Error("未配置 Client API 地址");
-        const res = await fetch(`${clientBase}/get?token=${encodeURIComponent(token)}`);
-        if (!res.ok) throw new ApiError(res.status, "资源加载失败");
-        const text = await res.text();
-        if (!text) return {};
-        return JSON.parse(text);
-    },
+        post<unknown>(`${acctPath(accountId)}/batch`, ops),
 };
 
 // ============================================================
-// Clients (Management API: /accounts/{accountId}/command/clients/*)
+// Clients (Management API: /account/{accountId}/client/*)
 // ============================================================
 
 export const clients = {
+    /** 列出已注册客户端 */
     list: (accountId: string) =>
-        get<string[]>(`${acctPath(accountId)}/command/clients/list`),
+        get<string[]>(`${acctPath(accountId)}/client/list`),
 
-    status: (accountId: string) =>
-        get<unknown>(`${acctPath(accountId)}/command/clients/status`),
+    /** 搜索客户端 */
+    search: (accountId: string, q?: string) =>
+        get<unknown>(`${acctPath(accountId)}/client/search${q ? `?q=${encodeURIComponent(q)}` : ""}`),
 
-    details: (accountId: string, uid: string) =>
-        get<unknown>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/details`),
+    /** 客户端详情 */
+    details: (accountId: string, clientId: string) =>
+        get<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}`),
 
-    restart: (accountId: string, uid: string) =>
-        get<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/restart`),
+    /** 删除客户端 */
+    delete: (accountId: string, clientId: string) =>
+        del<void>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}`),
 
-    forceSync: (accountId: string, uid: string) =>
-        get<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/update_data`),
+    /** 重命名客户端 */
+    rename: (accountId: string, clientId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/rename`, body),
 
-    sendNotification: (accountId: string, uid: string, payload: NotificationPayload) =>
-        post<StatusResponse>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/send_notification`, payload),
+    /** 获取客户端在线状态 */
+    status: (accountId: string, clientId: string) =>
+        get<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/status`),
 
-    getConfig: (accountId: string, uid: string, configType: number) =>
-        get<unknown>(`${acctPath(accountId)}/command/client/${encodeURIComponent(uid)}/get_config?config_type=${configType}`),
+    /** 断开客户端连接 */
+    disconnect: (accountId: string, clientId: string) =>
+        post<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/disconnect`),
+
+    /** 禁用客户端 */
+    disable: (accountId: string, clientId: string) =>
+        post<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/disable`),
+
+    /** 启用客户端 */
+    enable: (accountId: string, clientId: string) =>
+        post<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/enable`),
+
+    /** 修改客户端档案组 */
+    config: (accountId: string, clientId: string, body: unknown) =>
+        post<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/config`, body),
+
+    /** 重启客户端 */
+    restart: (accountId: string, clientId: string) =>
+        post<StatusResponse>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/command/restart`),
+
+    /** 强制同步数据 */
+    forceSync: (accountId: string, clientId: string) =>
+        post<StatusResponse>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/command/update-data`),
+
+    /** 发送通知 */
+    sendNotification: (accountId: string, clientId: string, payload: NotificationPayload) =>
+        post<StatusResponse>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/command/send-notification`, payload),
+
+    /** 请求客户端上报配置 */
+    getConfig: (accountId: string, clientId: string, configType: number) =>
+        get<unknown>(`${acctPath(accountId)}/client/${encodeURIComponent(clientId)}/command/get-config?config_type=${configType}`),
 };
 
 // ============================================================
@@ -432,11 +510,15 @@ export const adminApi = {
 
     /** 列出所有用户（分页） */
     listUsers: (offset = 0, limit = 20) =>
-        post<UserOut[]>(`/user/list?offset=${offset}&limit=${limit}`, undefined, adminBase()),
+        get<UserOut[]>(`/user/list?offset=${offset}&limit=${limit}`, adminBase()),
 
     /** 搜索用户 */
     searchUsers: (q: string) =>
-        post<UserOut[]>(`/user/search?q=${encodeURIComponent(q)}`, undefined, adminBase()),
+        get<UserOut[]>(`/user/search?q=${encodeURIComponent(q)}`, adminBase()),
+
+    /** 直接创建用户（跳过审核） */
+    createUser: (data: UserRegisterRequest) =>
+        post<UserOut>("/user/create", data, adminBase()),
 
     /** 查询单个用户 */
     getUser: (userId: string) =>
@@ -448,11 +530,23 @@ export const adminApi = {
 
     /** 删除用户 */
     deleteUser: (userId: string) =>
-        post<unknown>(`/user/${encodeURIComponent(userId)}/delete`, undefined, adminBase()),
+        del<unknown>(`/user/${encodeURIComponent(userId)}`, adminBase()),
+
+    /** 重命名用户 */
+    renameUser: (userId: string, data: { name: string }) =>
+        post<unknown>(`/user/${encodeURIComponent(userId)}/rename`, data, adminBase()),
+
+    /** 重置用户密码（无需旧密码） */
+    resetPassword: (userId: string, data: { new_password: string }) =>
+        post<unknown>(`/user/${encodeURIComponent(userId)}/password/reset`, data, adminBase()),
+
+    /** 修改用户密码（需旧密码） */
+    changePassword: (userId: string, data: PasswordChange) =>
+        post<unknown>(`/user/${encodeURIComponent(userId)}/password/change`, data, adminBase()),
 
     /** 待审核用户列表 */
     listPendingUsers: (offset = 0, limit = 50) =>
-        post<UserOut[]>(`/user/pending/list?offset=${offset}&limit=${limit}`, undefined, adminBase()),
+        get<UserOut[]>(`/user/pending/list?offset=${offset}&limit=${limit}`, adminBase()),
 
     /** 批准用户 */
     approveUser: (userId: string) =>
