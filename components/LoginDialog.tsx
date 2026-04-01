@@ -55,7 +55,7 @@ export default function LoginDialog() {
         <div className="login-dialog-overlay">
             <div className="login-dialog-card">
                 <div className="login-dialog-header">
-                    <div className="login-dialog-title">会话已过期</div>
+                    <div className="login-dialog-title">会话已过期或权限不足</div>
                     <div className="login-dialog-subtitle">请重新登录以继续操作</div>
                 </div>
 

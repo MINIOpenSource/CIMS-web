@@ -46,39 +46,40 @@ export default function DashboardPage() {
             router.push("/");
             return;
         }
+
+        async function loadStats() {
+            if (!accountId) return;
+            try {
+                const [cl, pr] = await Promise.allSettled([
+                    clients.list(accountId),
+                    pairing.listCodes(accountId),
+                ]);
+                const resourceTypes: ResourceType[] = [
+                    "ClassPlan", "TimeLayout", "Subjects", "Policy",
+                    "DefaultSettings", "Components", "Credentials",
+                ];
+                const resourceResults = await Promise.allSettled(
+                    resourceTypes.map(t => data.list(accountId, t))
+                );
+                let totalRes = 0;
+                resourceResults.forEach(r => {
+                    if (r.status === "fulfilled" && Array.isArray(r.value)) {
+                        totalRes += r.value.length;
+                    }
+                });
+
+                setStats({
+                    clientCount: cl.status === "fulfilled" && Array.isArray(cl.value) ? String(cl.value.length) : "0",
+                    pairingCount: pr.status === "fulfilled" && Array.isArray(pr.value) ? String(pr.value.length) : "0",
+                    resourceCount: String(totalRes),
+                });
+            } catch {
+                /* 加载失败保持默认值 */
+            }
+        }
+
         loadStats();
     }, [isAuthenticated, accountId, router]);
-
-    async function loadStats() {
-        if (!accountId) return;
-        try {
-            const [cl, pr] = await Promise.allSettled([
-                clients.list(accountId),
-                pairing.listCodes(accountId),
-            ]);
-            const resourceTypes: ResourceType[] = [
-                "ClassPlan", "TimeLayout", "Subjects", "Policy",
-                "DefaultSettings", "Components", "Credentials",
-            ];
-            const resourceResults = await Promise.allSettled(
-                resourceTypes.map(t => data.list(accountId, t))
-            );
-            let totalRes = 0;
-            resourceResults.forEach(r => {
-                if (r.status === "fulfilled" && Array.isArray(r.value)) {
-                    totalRes += r.value.length;
-                }
-            });
-
-            setStats({
-                clientCount: cl.status === "fulfilled" && Array.isArray(cl.value) ? String(cl.value.length) : "0",
-                pairingCount: pr.status === "fulfilled" && Array.isArray(pr.value) ? String(pr.value.length) : "0",
-                resourceCount: String(totalRes),
-            });
-        } catch {
-            /* 加载失败保持默认值 */
-        }
-    }
 
     if (!isAuthenticated || !accountId) return null;
 

@@ -1,0 +1,547 @@
+
+> cims-web-init@0.1.0 lint
+> eslint
+
+
+/www/CIMS-web/app/access/page.tsx
+  30:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/access/page.tsx:30:23
+  28 |     }, [accountId]);
+  29 |
+> 30 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |
+  32 |     async function handleSearch() {
+  33 |         if (!accountId || !searchQ.trim()) { loadData(); return; }  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/accounts/page.tsx
+  38:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/accounts/page.tsx:38:23
+  36 |     }, [accountId, currentAccount]);
+  37 |
+> 38 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  39 |
+  40 |     async function handleSlugChange(e: React.FormEvent) {
+  41 |         e.preventDefault();  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/admin/layout.tsx
+  42:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/www/CIMS-web/app/clients/page.tsx
+  45:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/clients/page.tsx:45:23
+  43 |     }, [accountId]);
+  44 |
+> 45 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |
+  47 |     async function showDetails(uid: string) {
+  48 |         setSelectedUid(uid);  react-hooks/set-state-in-effect
+  90:23  warning  '_uid' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+/www/CIMS-web/app/dashboard/page.tsx
+  49:9  error    Error: Cannot access variable before it is declared
+
+`loadStats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/www/CIMS-web/app/dashboard/page.tsx:49:9
+  47 |             return;
+  48 |         }
+> 49 |         loadStats();
+     |         ^^^^^^^^^ `loadStats` accessed before it is declared
+  50 |     }, [isAuthenticated, accountId, router]);
+  51 |
+  52 |     async function loadStats() {
+
+/www/CIMS-web/app/dashboard/page.tsx:52:5
+  50 |     }, [isAuthenticated, accountId, router]);
+  51 |
+> 52 |     async function loadStats() {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 53 |         if (!accountId) return;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 54 |         try {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 80 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 81 |     }
+     | ^^^^^^ `loadStats` is declared here
+  82 |
+  83 |     if (!isAuthenticated || !accountId) return null;
+  84 |  react-hooks/immutability
+  50:8  warning  React Hook useEffect has a missing dependency: 'loadStats'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+/www/CIMS-web/app/invitations/page.tsx
+  33:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/invitations/page.tsx:33:23
+  31 |     }, [accountId]);
+  32 |
+> 33 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |
+  35 |     async function handleCreate() {
+  36 |         setCreating(true);  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/login/page.tsx
+   6:34  warning  'ApiError' is defined but never used  @typescript-eslint/no-unused-vars
+  11:8   warning  'Link' is defined but never used      @typescript-eslint/no-unused-vars
+  57:18  warning  'err' is defined but never used       @typescript-eslint/no-unused-vars
+
+/www/CIMS-web/app/notifications/page.tsx
+  35:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/notifications/page.tsx:35:23
+  33 |     }, [accountId]);
+  34 |
+> 35 |     useEffect(() => { load(); }, [load]);
+     |                       ^^^^ Avoid calling setState() directly within an effect
+  36 |
+  37 |     async function handleSend(e: React.FormEvent) {
+  38 |         e.preventDefault();  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/page.tsx
+  52:45  warning  'accountId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/www/CIMS-web/app/pairing/page.tsx
+  29:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/pairing/page.tsx:29:23
+  27 |     }, [accountId]);
+  28 |
+> 29 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |
+  31 |     async function handleApprove(pairingId: string) {
+  32 |         try {  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/pre-registration/page.tsx
+  32:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/pre-registration/page.tsx:32:23
+  30 |     }, [accountId]);
+  31 |
+> 32 |     useEffect(() => { loadData(); }, [loadData]);
+     |                       ^^^^^^^^ Avoid calling setState() directly within an effect
+  33 |
+  34 |     async function handleCreate() {
+  35 |         if (!form.label.trim() || !form.class_identity.trim()) return;  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/profiles/classplan/page.tsx
+    6:68  warning  'TimeType' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   47:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/classplan/page.tsx:47:23
+  45 |     }, [accountId]);
+  46 |
+> 47 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  48 |
+  49 |     // 同时加载 TimeLayout 和 Subjects 数据
+  50 |     const loadRelatedData = useCallback(async () => {      react-hooks/set-state-in-effect
+   68:23  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/classplan/page.tsx:68:23
+  66 |     }, [accountId]);
+  67 |
+> 68 |     useEffect(() => { loadRelatedData(); }, [loadRelatedData]);
+     |                       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  69 |
+  70 |     async function selectFile(name: string) {
+  71 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+  170:11  warning  'classSlots' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+
+/www/CIMS-web/app/profiles/components/page.tsx
+   43:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/components/page.tsx:43:23
+  41 |     }, [accountId]);
+  42 |
+> 43 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |
+  45 |     async function selectFile(name: string) {
+  46 |         setSelectedFile(name);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/set-state-in-effect
+  229:34  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/www/CIMS-web/app/profiles/components/page.tsx:229:34
+  227 |                             {/* 基本信息 */}
+  228 |                             <div className="settings-section">
+> 229 |                                 <SectionHeader id="basic" title="基本信息" />
+      |                                  ^^^^^^^^^^^^^ This component is created during render
+  230 |                                 {expandedSections.basic && (
+  231 |                                     <div style={{ paddingTop: 8 }}>
+  232 |                                         <div className="grid-2">
+
+/www/CIMS-web/app/profiles/components/page.tsx:140:5
+  138 |     const current = selectedIdx >= 0 && selectedIdx < components.length ? components[selectedIdx] : null;
+  139 |
+> 140 |     function SectionHeader({ id, title }: { id: string; title: string }) {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 141 |         const open = expandedSections[id];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |         return (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |             <div className="settings-section-title" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                 onClick={() => toggleSection(id)}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                 {open ? <ChevronDown24Regular style={{ width: 16, height: 16 }} /> : <ChevronRight24Regular style={{ width: 16, height: 16 }} />}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 {title}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |         );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     }
+      | ^^^^^^ The component is created during render here
+  150 |
+  151 |     return (
+  152 |         <div className="fade-in">                                                   react-hooks/static-components
+  260:34  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/www/CIMS-web/app/profiles/components/page.tsx:260:34
+  258 |                             {/* 字体大小 */}
+  259 |                             <div className="settings-section">
+> 260 |                                 <SectionHeader id="fonts" title="字体大小" />
+      |                                  ^^^^^^^^^^^^^ This component is created during render
+  261 |                                 {expandedSections.fonts && (
+  262 |                                     <div style={{ paddingTop: 8 }}>
+  263 |                                         <div className="settings-item">
+
+/www/CIMS-web/app/profiles/components/page.tsx:140:5
+  138 |     const current = selectedIdx >= 0 && selectedIdx < components.length ? components[selectedIdx] : null;
+  139 |
+> 140 |     function SectionHeader({ id, title }: { id: string; title: string }) {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 141 |         const open = expandedSections[id];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |         return (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |             <div className="settings-section-title" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                 onClick={() => toggleSection(id)}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                 {open ? <ChevronDown24Regular style={{ width: 16, height: 16 }} /> : <ChevronRight24Regular style={{ width: 16, height: 16 }} />}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 {title}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |         );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     }
+      | ^^^^^^ The component is created during render here
+  150 |
+  151 |     return (
+  152 |         <div className="fade-in">                                            react-hooks/static-components
+  294:34  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/www/CIMS-web/app/profiles/components/page.tsx:294:34
+  292 |                             {/* 颜色与透明度 */}
+  293 |                             <div className="settings-section">
+> 294 |                                 <SectionHeader id="colors" title="颜色与透明度" />
+      |                                  ^^^^^^^^^^^^^ This component is created during render
+  295 |                                 {expandedSections.colors && (
+  296 |                                     <div style={{ paddingTop: 8 }}>
+  297 |                                         {/* 前景色 */}
+
+/www/CIMS-web/app/profiles/components/page.tsx:140:5
+  138 |     const current = selectedIdx >= 0 && selectedIdx < components.length ? components[selectedIdx] : null;
+  139 |
+> 140 |     function SectionHeader({ id, title }: { id: string; title: string }) {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 141 |         const open = expandedSections[id];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |         return (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |             <div className="settings-section-title" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                 onClick={() => toggleSection(id)}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                 {open ? <ChevronDown24Regular style={{ width: 16, height: 16 }} /> : <ChevronRight24Regular style={{ width: 16, height: 16 }} />}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 {title}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |         );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     }
+      | ^^^^^^ The component is created during render here
+  150 |
+  151 |     return (
+  152 |         <div className="fade-in">                                                          react-hooks/static-components
+  388:34  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/www/CIMS-web/app/profiles/components/page.tsx:388:34
+  386 |                             {/* 布局 */}
+  387 |                             <div className="settings-section">
+> 388 |                                 <SectionHeader id="layout" title="布局" />
+      |                                  ^^^^^^^^^^^^^ This component is created during render
+  389 |                                 {expandedSections.layout && (
+  390 |                                     <div style={{ paddingTop: 8 }}>
+  391 |                                         <div className="form-group">
+
+/www/CIMS-web/app/profiles/components/page.tsx:140:5
+  138 |     const current = selectedIdx >= 0 && selectedIdx < components.length ? components[selectedIdx] : null;
+  139 |
+> 140 |     function SectionHeader({ id, title }: { id: string; title: string }) {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 141 |         const open = expandedSections[id];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |         return (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |             <div className="settings-section-title" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                 onClick={() => toggleSection(id)}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                 {open ? <ChevronDown24Regular style={{ width: 16, height: 16 }} /> : <ChevronRight24Regular style={{ width: 16, height: 16 }} />}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 {title}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |         );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     }
+      | ^^^^^^ The component is created during render here
+  150 |
+  151 |     return (
+  152 |         <div className="fade-in">                                                 react-hooks/static-components
+  458:34  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/www/CIMS-web/app/profiles/components/page.tsx:458:34
+  456 |                             {/* 高级: Settings 和 HidingRules JSON 原始数据 */}
+  457 |                             <div className="settings-section">
+> 458 |                                 <SectionHeader id="advanced" title="高级设置 (JSON)" />
+      |                                  ^^^^^^^^^^^^^ This component is created during render
+  459 |                                 {expandedSections.advanced && (
+  460 |                                     <div style={{ paddingTop: 8 }}>
+  461 |                                         <div className="form-group">
+
+/www/CIMS-web/app/profiles/components/page.tsx:140:5
+  138 |     const current = selectedIdx >= 0 && selectedIdx < components.length ? components[selectedIdx] : null;
+  139 |
+> 140 |     function SectionHeader({ id, title }: { id: string; title: string }) {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 141 |         const open = expandedSections[id];
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |         return (
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |             <div className="settings-section-title" style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |                 onClick={() => toggleSection(id)}>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |                 {open ? <ChevronDown24Regular style={{ width: 16, height: 16 }} /> : <ChevronRight24Regular style={{ width: 16, height: 16 }} />}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |                 {title}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |             </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |         );
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     }
+      | ^^^^^^ The component is created during render here
+  150 |
+  151 |     return (
+  152 |         <div className="fade-in">  react-hooks/static-components
+
+/www/CIMS-web/app/profiles/credentials/page.tsx
+  44:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/credentials/page.tsx:44:23
+  42 |     }, [accountId]);
+  43 |
+> 44 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  45 |
+  46 |     async function selectFile(name: string) {
+  47 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/profiles/policy/page.tsx
+  45:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/policy/page.tsx:45:23
+  43 |     }, [accountId]);
+  44 |
+> 45 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |
+  47 |     async function selectFile(name: string) {
+  48 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/profiles/settings/page.tsx
+  34:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/settings/page.tsx:34:23
+  32 |     }, [accountId]);
+  33 |
+> 34 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  35 |
+  36 |     async function selectFile(name: string) {
+  37 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+
+/www/CIMS-web/app/profiles/subjects/page.tsx
+   35:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/subjects/page.tsx:35:23
+  33 |     }, [accountId]);
+  34 |
+> 35 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  36 |
+  37 |     async function selectFile(name: string) {
+  38 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+  173:78  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+  173:83  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+/www/CIMS-web/app/profiles/timelayout/page.tsx
+   48:23   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/app/profiles/timelayout/page.tsx:48:23
+  46 |     }, [accountId]);
+  47 |
+> 48 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  49 |
+  50 |     async function selectFile(name: string) {
+  51 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+  223:104  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/no-unescaped-entities
+  223:110  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react/no-unescaped-entities
+
+/www/CIMS-web/components/JsonResourceEditor.tsx
+  44:23  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/www/CIMS-web/components/JsonResourceEditor.tsx:44:23
+  42 |     }, [resourceType, accountId]);
+  43 |
+> 44 |     useEffect(() => { loadFiles(); }, [loadFiles]);
+     |                       ^^^^^^^^^ Avoid calling setState() directly within an effect
+  45 |
+  46 |     async function selectFile(name: string) {
+  47 |         setSelectedFile(name);  react-hooks/set-state-in-effect
+
+/www/CIMS-web/components/Sidebar.tsx
+  81:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/www/CIMS-web/lib/api.ts
+   15:19  warning  'SettingsUpdate' is defined but never used  @typescript-eslint/no-unused-vars
+  122:10  warning  'put' is defined but never used             @typescript-eslint/no-unused-vars
+  129:10  warning  'patch' is defined but never used           @typescript-eslint/no-unused-vars
+
+✖ 39 problems (26 errors, 13 warnings)
+

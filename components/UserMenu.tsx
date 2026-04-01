@@ -19,7 +19,7 @@ import {
 } from "@fluentui/react-icons";
 
 export default function UserMenu() {
-    const { isSuperAdmin, logout } = useAuth();
+    const { isSuperAdmin, logout, token } = useAuth();
     const { accounts, currentAccount, switchAccount } = useAccount();
     const [open, setOpen] = useState(false);
     const [showSwitcher, setShowSwitcher] = useState(false);
@@ -110,14 +110,21 @@ export default function UserMenu() {
 
                             {/* SuperAdmin 入口 */}
                             {isSuperAdmin && (
-                                <a
+                                <button
                                     className="user-menu-item user-menu-item-admin"
-                                    href="/admin"
-                                    onClick={() => setOpen(false)}
+                                    onClick={() => {
+                                        setOpen(false);
+                                        const adminUrl = process.env.NEXT_PUBLIC_ADMIN_SITE_URL;
+                                        if (adminUrl && token) {
+                                            window.location.href = `${adminUrl}/auth?token=${encodeURIComponent(token)}`;
+                                        } else {
+                                            window.location.href = "/admin";
+                                        }
+                                    }}
                                 >
                                     <ShieldKeyhole24Regular />
                                     <span>管理员面板</span>
-                                </a>
+                                </button>
                             )}
 
                             {/* 安全设置 */}

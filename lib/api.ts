@@ -92,9 +92,9 @@ async function request<T>(
 
     const res = await fetch(`${base}${path}`, { ...options, headers });
 
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         emitAuthExpired();
-        throw new ApiError(401, "未授权，请重新登录");
+        throw new ApiError(res.status, "未授权或权限不足，请重新登录");
     }
 
     if (!res.ok) {
@@ -173,6 +173,14 @@ export const auth = {
     /** 登出 */
     logout: () =>
         post<MessageResponse>("/token/deactivate"),
+
+    /** 检查邮箱是否可用 (未被注册) */
+    checkMailAvailability: (email: string) =>
+        get<unknown>(`/user/availability/mail?value=${encodeURIComponent(email)}`),
+
+    /** 检查用户名是否可用 */
+    checkUsernameAvailability: (username: string) =>
+        get<unknown>(`/user/availability/username?value=${encodeURIComponent(username)}`),
 };
 
 // ============================================================
