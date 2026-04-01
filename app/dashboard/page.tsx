@@ -38,10 +38,8 @@ export default function DashboardPage() {
     });
 
     useEffect(() => {
-        if (!isAuthenticated) {
-            router.push("/login");
-            return;
-        }
+        // AppShell handles the authentication redirect
+
         if (!accountId) {
             router.push("/");
             return;

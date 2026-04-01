@@ -384,7 +384,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--accent-color);
 }
 
 .login-card {
@@ -753,7 +753,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -798,7 +798,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--accent-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1085,7 +1085,7 @@ body {
 
 .accounts-list-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f0f4ff 0%, var(--bg-primary) 40%);
+  background: var(--bg-primary);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -1186,7 +1186,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #e1efff, #cce0ff);
+  background: #e1efff;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -19,8 +19,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const isExcluded = SHELL_EXCLUDED_PATHS.some(p => pathname.startsWith(p));
     const isAccountListPage = pathname === "/";
 
+    React.useEffect(() => {
+        if (!isAuthenticated && !isExcluded) {
+            // Unauthenticated users trying to access protected routes are redirected
+            // Note: waiting for a proper router.push to take effect
+            if (typeof window !== "undefined") {
+                window.location.href = "/login";
+            }
+        }
+    }, [isAuthenticated, isExcluded, pathname]);
+
     // 需要完整 Shell 的条件：已登录 + 已选择账户 + 不在排除页面 + 不在账户列表页
     const showFullShell = isAuthenticated && accountId && !isExcluded && !isAccountListPage;
+
+    if (!isAuthenticated && !isExcluded) {
+        return null; // Stop rendering until redirect completes
+    }
 
     return (
         <>

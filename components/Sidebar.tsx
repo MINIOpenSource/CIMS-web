@@ -78,6 +78,7 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-header">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.svg" alt="ClassIsland" className="sidebar-logo" />
                 <div className="sidebar-title">CIMS 管理面板</div>
             </div>

@@ -26,9 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
 
     useEffect(() => {
-        if (!isAuthenticated) {
-            router.push("/login");
-        } else if (!isSuperAdmin) {
+        if (isAuthenticated && !isSuperAdmin) {
             router.push("/");
         }
     }, [isAuthenticated, isSuperAdmin, router]);
@@ -39,6 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="app-layout">
             <aside className="sidebar admin-sidebar">
                 <div className="sidebar-header">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src="/logo.svg" alt="ClassIsland" className="sidebar-logo" />
                     <div className="sidebar-title">超管面板</div>
                 </div>

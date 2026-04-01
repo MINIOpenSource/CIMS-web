@@ -51,11 +51,14 @@ export default function LoginPage() {
 
         setLocalLoading(true);
         try {
-            await authApi.checkMailAvailability(email);
-            // 返回成功说明邮箱未注册
-            setStep("register");
+            const res = await authApi.checkMailAvailability(email) as { available?: boolean };
+            if (res && res.available === false) {
+                setStep("login");
+            } else {
+                setStep("register");
+            }
         } catch (err: unknown) {
-            // 如果检查抛出错误，可能是已被占用 (422) 等，转入登录流程
+            // 如果检查抛出错误（例如网络错误或 422），安全起见由于不可知，默认进入登录
             setStep("login");
         } finally {
             setLocalLoading(false);

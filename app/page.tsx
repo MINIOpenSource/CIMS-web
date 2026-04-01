@@ -48,15 +48,9 @@ function AccountCard({ account, onSelect }: { account: AccountOut; onSelect: () 
 }
 
 export default function AccountListPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const { accounts, loading, switchAccount, accountId } = useAccount();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, router]);
 
   function handleSelect(account: AccountOut) {
     switchAccount(account.id);
@@ -66,15 +60,11 @@ export default function AccountListPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="accounts-list-page fade-in">
-      <div className="accounts-list-container">
-        <div className="accounts-list-header">
-          <div>
-            <h1 className="accounts-list-title">选择账户</h1>
-            <p className="accounts-list-subtitle">
-              选择一个账户以进入管理面板
-            </p>
-          </div>
+    <div className="login-container fade-in">
+      <div className="login-card" style={{ padding: "32px 24px" }}>
+        <div className="login-title">选择账户</div>
+        <div className="login-subtitle">
+          选择一个账户以进入管理面板
         </div>
 
         {loading ? (
@@ -106,6 +96,9 @@ export default function AccountListPage() {
             ))}
           </div>
         )}
+        <div style={{ marginTop: 24, textAlign: "center" }}>
+          <Button appearance="subtle" onClick={() => logout()}>退出登录</Button>
+        </div>
       </div>
     </div>
   );
